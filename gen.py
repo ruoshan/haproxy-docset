@@ -1,7 +1,7 @@
 #!/usr/local/bin/python
 
 import os, re, sqlite3
-from bs4 import BeautifulSoup, NavigableString, Tag 
+from bs4 import BeautifulSoup, NavigableString, Tag
 
 db = sqlite3.connect('./docSet.dsidx')
 cur = db.cursor()
