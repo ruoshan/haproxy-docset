@@ -16,17 +16,21 @@ cur.execute('CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path);')
 
 docpath = './Documents'
 
-page = open(os.path.join(docpath,'configuration.html')).read()
-soup = BeautifulSoup(page)
+def gen_index(filename):
+    page = open(os.path.join(docpath,filename)).read()
+    soup = BeautifulSoup(page)
 
-for div in soup.find_all('div', {'class': "keyword"}):
-    try:
-        a = div.b.find_all("a")[1]
-        name = a.string
-        path = "configuration.html" + a.attrs["href"]
-        cur.execute('INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?,?,?)', (name, 'Directive', path))
-    except:
-        continue
+    for div in soup.find_all('div', {'class': "keyword"}):
+        try:
+            a = div.b.find_all("a")[1]
+            name = a.string
+            path = filename + a.attrs["href"]
+            cur.execute('INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?,?,?)', (name, 'Directive', path))
+        except:
+            continue
+
+gen_index("configuration.html")
+gen_index("management.html")
 
 db.commit()
 db.close()
