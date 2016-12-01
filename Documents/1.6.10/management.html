@@ -2,11 +2,34 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<title>HAProxy 1.6 - Management Guide</title>
-		<link href="./css/bootstrap.min.css" rel="stylesheet" />
-		<link href="./css/page.css" rel="stylesheet" />
+		<title>HAProxy version 1.6.10 - Management Guide</title>
+        <link href="css/twitter-bootstrap.min.css" rel="stylesheet" />
+        <link href="css/cerulean-bootstrap.min.css" rel="stylesheet" />
+        <link href="css/page.css" rel="stylesheet" />
 	</head>
 	<body>
+		<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#menu">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+			</div>
+			<!-- /.navbar-header -->
+
+			<!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="collapse navbar-collapse" id="menu">
+				<ul class="nav navbar-nav">
+						<li class=""><a href="intro.html">Starter Guide</a></li>
+						<li class=""><a href="configuration.html">Configuration Manual</a></li>
+						<li class="active"><a href="management.html">Management Guide</a></li>
+				</ul>
+			</div>
+		</nav>
+		<!-- /.navbar-static-side -->
+
 		<div id="wrapper">
 			<div id="page-wrapper">
 				<div class="row">
@@ -14,7 +37,7 @@
 						<div class="text-center">
 							<h1>HAProxy</h1>
 							<h2>Management Guide</h2>
-							<p><strong>version 1.6</strong></p>
+							<p><strong>version 1.6.10</strong></p>
 							<p>
 								<a href="http://www.haproxy.org/" title="HAProxy Home Page"><img src="img/logo-med.png" /></a><br>
 								<br>
@@ -32,7 +55,7 @@
 <div class="page-header">
 	<h1 id="chapter-summary" data-target="summary">Summary</h1>
 </div>
-<table>
+<table class="summary">
 	<tbody>
 		
 			
@@ -176,6 +199,7 @@
 				
 	</tbody>
 </table>
+
 
 <a class="anchor" id="1" name="1"></a>
 <div class="page-header"><h1 id="chapter-1" data-target="1"><small><a class="small" href="#1">1.</a></small> Prerequisites</h1>
@@ -1174,6 +1198,9 @@ example :
 
     # echo &quot;show info;show stat;show table&quot; | socat /var/run/haproxy stdio
 
+If a command needs to use a semi-colon (eg: in a value), it must be preceeded
+by a backslash ('\').
+
 The interactive mode displays a prompt ('&gt;') and waits for commands to be
 entered on the line, then processes them, and displays the prompt again to wait
 for a new command. This mode is entered via the &quot;<a href="#prompt">prompt</a>&quot; command which must be
@@ -2111,27 +2138,45 @@ A safe configuration will have :
 						<br>
 						<hr>
 						<div class="text-right">
-							HAProxy 1.6 &ndash; Management Guide<br>
+							HAProxy 1.6.10 &ndash; Management Guide<br>
 							<small>, </small>
 						</div>
 					</div>
 					<!-- /.col-lg-12 -->
 				</div>
 				<!-- /.row -->
-				<div style="position: fixed; z-index: 1000; bottom: 0; left: 0; right: 0; padding: 10px">
-					<ul class="pager" style="margin: 0">
-						<li class="previous"><a id="previous" href="#"></a></li>
-						<li class="next"><a id="next" href="#"></a></li>
-					</ul>
-				</div>
 			</div>
 			<!-- /#page-wrapper -->
 
 		</div>
 		<!-- /#wrapper -->
 
-		<script src="./js/jquery-1.11.0.min.js"></script>
-		<script src="./js/bootstrap-3.1.1.min.js"></script>
+        <script src="js/jquery.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+		<script>
+			function filterKeywords(text) {
+				$('.letter').each(function(idx1, letter) {
+					$letter = $(letter)
+					found = false
+					$letter.find('.list-group-item').each(function(idx2, keyword) {
+						$keyword = $(keyword)
+						if ($keyword.text().indexOf(text) != -1) {
+							$keyword.show();
+							found = true
+						}
+						else {
+							$keyword.hide();
+						}
+					})
+					if (found) {
+						$letter.show()
+					}
+					else {
+						$letter.hide()
+					}
+				})
+			}
+		</script>
 		<script>
 			/* EXPERIMENTAL - Previous/Next navigation */
 			var headings = $(":header")
@@ -2162,18 +2207,7 @@ A safe configuration will have :
 				})
 
 				previousTarget = previous ? previous.attr('data-target') : 'top'
-				$previous.html(
-					previous && previousTarget ?
-						'<span class="glyphicon glyphicon-arrow-left"></span> ' + previous.text() :
-						'<span class="glyphicon glyphicon-arrow-up"></span> Top'
-				).attr('href', '#' + previousTarget)
-
 				nextTarget = next ? next.attr('data-target') : 'bottom'
-				$next.html(
-					next && nextTarget ?
-						next.text() + ' <span class="glyphicon glyphicon-arrow-right"></span>' :
-						'Bottom <span class="glyphicon glyphicon-arrow-down"></span>'
-				).attr('href', '#' + nextTarget)
 			}
 
 			$(window).scroll(function () {
@@ -2181,28 +2215,26 @@ A safe configuration will have :
 			});
 			$(document).ready(function() {
 				refreshNavigation()
-				//updateKeyboardNavStatus()
 			});
 
 			/* EXPERIMENTAL - Enable keyboard navigation */
 			$(document).keydown(function(e){
-				if (searchFocus) return
+				if (!(e.altKey || e.ctrlKey || e.shiftKey || e.metaKey)) {
+					switch(e.which) {
+						case 37: // left
+						window.location.hash = previousTarget ? previousTarget : 'top'
+						break
 
-				switch(e.which) {
-					case 37: // left
-					window.location.hash = previousTarget ? previousTarget : 'top'
-					break
+						case 39: // right
+						window.location.hash = nextTarget ? nextTarget : 'bottom'
+						break
 
-					case 39: // right
-					window.location.hash = nextTarget ? nextTarget : 'bottom'
-					break
-
-					default: return // exit this handler for other keys
+						default: return // exit this handler for other keys
+					}
+					e.preventDefault()
 				}
-				e.preventDefault()
 			})
 		</script>
-		
 		<a class="anchor" name="bottom"></a>
 	</body>
 </html>

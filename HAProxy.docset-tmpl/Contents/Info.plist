@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>haproxy</string>
+    <key>CFBundleName</key>
+    <string>HAProxy</string>
+    <key>DashDocSetKeyword</key>
+    <string>haproxy</string>
+    <key>DashDocSetPluginKeyword</key>
+    <string>haproxy</string>
+    <key>DocSetPlatformFamily</key>
+    <string>usercontribHAProxy</string>
+    <key>dashIndexFilePath</key>
+    <string>VERSION/configuration.html</string>
+    <key>isDashDocset</key>
+    <true/>
+    <key>isJavaScriptEnabled</key>
+    <true/>
+</dict>
+</plist>

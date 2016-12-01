@@ -2,6 +2,13 @@
 
 import os, re, sqlite3
 from bs4 import BeautifulSoup, NavigableString, Tag
+import sys
+
+if len(sys.argv) != 2:
+    print "gen.py {version}"
+    sys.exit(1)
+else:
+    V = sys.argv[1]
 
 db = sqlite3.connect('./docSet.dsidx')
 cur = db.cursor()
@@ -29,8 +36,8 @@ def gen_index(filename):
         except:
             continue
 
-gen_index("configuration.html")
-gen_index("management.html")
+gen_index(V + "/configuration.html")
+gen_index(V + "/management.html")
 
 db.commit()
 db.close()
