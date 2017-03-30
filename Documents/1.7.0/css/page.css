@@ -1,12 +1,12 @@
 /* Global Styles */
 
 body {
-	margin-top: 50px;
+	margin-top: 0px;
 	background: #fff;
 }
 
 a.anchor {
-	display: block; position: relative; top: -50px; visibility: hidden;
+	display: block; position: relative; top: 0px; visibility: hidden;
 }
 
 /* ------------------------------- */

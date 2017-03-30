@@ -11,7 +11,7 @@
     <key>DashDocSetPluginKeyword</key>
     <string>haproxy</string>
     <key>DocSetPlatformFamily</key>
-    <string>usercontribHAProxy</string>
+    <string>haproxy</string>
     <key>dashIndexFilePath</key>
     <string>VERSION/configuration.html</string>
     <key>isDashDocset</key>
