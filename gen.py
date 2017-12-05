@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python2
 
 import os, re, sqlite3
 from bs4 import BeautifulSoup, NavigableString, Tag
