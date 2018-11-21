@@ -5,8 +5,12 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-cp -r HAProxy.docset-tmpl HAProxy-$1.docset
-sed -i "" -e "s/VERSION/$1/g" HAProxy-$1.docset/Contents/Info.plist
-cp -r Documents/$1 HAProxy-$1.docset/Contents/Resources/Documents/
+rm -rf HAProxy.docset HAProxy.tgz
+
+cp -r HAProxy.docset-tmpl HAProxy.docset
+sed -i "" -e "s/VERSION/$1/g" HAProxy.docset/Contents/Info.plist
+cp -r Documents/$1 HAProxy.docset/Contents/Resources/Documents/
 ./gen.py $1
-mv docSet.dsidx HAProxy-$1.docset/Contents/Resources/
+mv docSet.dsidx HAProxy.docset/Contents/Resources/
+
+tar zcf HAProxy.tgz HAProxy.docset
