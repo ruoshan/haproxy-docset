@@ -1,11 +1,11 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import os, re, sqlite3
 from bs4 import BeautifulSoup, NavigableString, Tag
 import sys
 
 if len(sys.argv) != 2:
-    print "gen.py {version}"
+    print("gen.py {version}")
     sys.exit(1)
 else:
     V = sys.argv[1]
