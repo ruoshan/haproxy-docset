@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ $# -ne 1 ]; then
-    echo "./build.sh version"
+    echo "./build.sh version (eg.2.4.0)"
     exit 1
 fi
 
