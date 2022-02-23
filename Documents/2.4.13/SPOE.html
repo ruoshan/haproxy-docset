@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>HAProxy version 2.4.13 - SPOE</title>
+        <link href="css/twitter-bootstrap.min.css" rel="stylesheet" />
+        <link href="css/cerulean-bootstrap.min.css" rel="stylesheet" />
+        <link href="css/page.css?0.4.2" rel="stylesheet" />
+	</head>
+	<body>
+		<nav class="navbar navbar-default" role="navigation">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#menu">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+			</div>
+			<!-- /.navbar-header -->
+
+			<!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="collapse navbar-collapse" id="menu">
+				<ul class="nav navbar-nav">
+						<li class=""><a href="intro.html">Starter Guide</a></li>
+						<li class=""><a href="configuration.html">Configuration Manual</a></li>
+						<li class=""><a href="management.html">Management Guide</a></li>
+						<li class=""><a href="lua.html">Lua</a></li>
+						<li class="active"><a href="SPOE.html">SPOE</a></li>
+				</ul>
+			</div>
+		</nav>
+		<!-- /.navbar-static-side -->
+
+		<div id="wrapper">
+			<div id="page-wrapper">
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="text-center">
+                            <h1><a href="http://www.haproxy.org/" title="HAProxy"><img src="img/HAProxyCommunityEdition_60px.png?0.4.2" /></a></h1>
+							<h2>SPOE</h2>
+							<p><strong>version 2.4.13</strong></p>
+							<p>
+								( Last update: 2020-06-13 )<br>
+								Author : Christopher Faulet
+							</p>
+						</div>
+
+						<div><pre class="text">SUMMARY
+--------
+
+  0.      Terms
+  1.      Introduction
+  2.      SPOE configuration
+  2.1.        SPOE scope
+  2.2.        &quot;<a href="#spoe-agent">spoe-agent</a>&quot; section
+  2.3.        &quot;<a href="#spoe-message">spoe-message</a>&quot; section
+  2.4.        &quot;<a href="#spoe-group">spoe-group</a>&quot; section
+  2.5.        Example
+  3.      SPOP specification
+  3.1.        Data types
+  3.2.        Frames
+  3.2.1.          Frame capabilities
+  3.2.2.          Frame types overview
+  3.2.3.          Workflow
+  3.2.4.          Frame: HAPROXY-HELLO
+  3.2.5.          Frame: AGENT-HELLO
+  3.2.6.          Frame: NOTIFY
+  3.2.7.          Frame: ACK
+  3.2.8.          Frame: HAPROXY-DISCONNECT
+  3.2.9.          Frame: AGENT-DISCONNECT
+  3.3.        Events &amp; messages
+  3.4.        Actions
+  3.5.        Errors &amp; timeouts
+  4.      Logging
+</pre></div>
+<a class="anchor" id="summary" name="summary"></a>
+<div class="page-header">
+	<h1 id="chapter-summary" data-target="summary">Summary</h1>
+</div>
+<table class="summary">
+	<tbody>
+		
+			
+				
+				<tr>
+					<td><b><small>0.</small></b></td>
+					<td>
+							<a href="#0"><b>Terms</b></a>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><br><b><small>1.</small></b></td>
+					<td>
+							<a href="#1"><br><b>Introduction</b></a>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><br><b><small>2.</small></b></td>
+					<td>
+							<a href="#2"><br><b>SPOE configuration</b></a>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>2.1.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#2.1">SPOE scope</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>2.2.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#2.2">"spoe-agent" section</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>2.3.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#2.3">"spoe-message" section</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>2.4.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#2.4">"spoe-group" section</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>2.5.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#2.5">Example</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><br><b><small>3.</small></b></td>
+					<td>
+							<a href="#3"><br><b>SPOP specification</b></a>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>3.1.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#3.1">Data types</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>3.2.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#3.2">Frames</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>3.2.1.</small></td>
+					<td>
+							<div class="tab">
+							<div class="tab">
+							<a href="#3.2.1">Frame capabilities</a>
+							</div>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>3.2.2.</small></td>
+					<td>
+							<div class="tab">
+							<div class="tab">
+							<a href="#3.2.2">Frame types overview</a>
+							</div>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>3.2.3.</small></td>
+					<td>
+							<div class="tab">
+							<div class="tab">
+							<a href="#3.2.3">Workflow</a>
+							</div>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>3.2.4.</small></td>
+					<td>
+							<div class="tab">
+							<div class="tab">
+							<a href="#3.2.4">Frame: HAPROXY-HELLO</a>
+							</div>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>3.2.5.</small></td>
+					<td>
+							<div class="tab">
+							<div class="tab">
+							<a href="#3.2.5">Frame: AGENT-HELLO</a>
+							</div>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>3.2.6.</small></td>
+					<td>
+							<div class="tab">
+							<div class="tab">
+							<a href="#3.2.6">Frame: NOTIFY</a>
+							</div>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>3.2.7.</small></td>
+					<td>
+							<div class="tab">
+							<div class="tab">
+							<a href="#3.2.7">Frame: ACK</a>
+							</div>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>3.2.8.</small></td>
+					<td>
+							<div class="tab">
+							<div class="tab">
+							<a href="#3.2.8">Frame: HAPROXY-DISCONNECT</a>
+							</div>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>3.2.9.</small></td>
+					<td>
+							<div class="tab">
+							<div class="tab">
+							<a href="#3.2.9">Frame: AGENT-DISCONNECT</a>
+							</div>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>3.3.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#3.3">Events & Messages</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>3.4.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#3.4">Actions</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>3.5.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#3.5">Errors & timeouts</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><br><b><small>4.</small></b></td>
+					<td>
+							<a href="#4"><br><b>Logging</b></a>
+					<td>
+				</tr>
+				
+	</tbody>
+</table>
+
+
+<a class="anchor" id="0" name="0"></a>
+<div class="page-header"><h1 id="chapter-0" data-target="0"><small><a class="small" href="#0">0.</a></small> Terms</h1>
+</div><div><pre class="text">* SPOE : Stream Processing Offload Engine.
+
+    A SPOE is a filter talking to servers managed by a SPOA to offload the
+    stream processing. An engine is attached to a proxy. A proxy can have
+    several engines. Each engine is linked to an agent and only one.
+
+* SPOA : Stream Processing Offload Agent.
+
+    A SPOA is a service that will receive info from a SPOE to offload the
+    stream processing. An agent manages several servers. It uses a backend to
+    reference all of them. By extension, these servers can also be called
+    agents.
+
+* SPOP : Stream Processing Offload Protocol, used by SPOEs to talk to SPOA
+         servers.
+
+    This protocol is used by engines to talk to agents. It is an in-house
+    binary protocol described in this documentation.
+</pre></div>
+<a class="anchor" id="1" name="1"></a>
+<div class="page-header"><h1 id="chapter-1" data-target="1"><small><a class="small" href="#1">1.</a></small> Introduction</h1>
+</div><div><pre class="text">SPOE is a feature introduced in HAProxy 1.7. It makes possible the
+communication with external components to retrieve some info. The idea started
+with the problems caused by most ldap libs not working fine in event-driven
+systems (often at least the connect() is blocking). So, it is hard to properly
+implement Single Sign On solution (SSO) in HAProxy. The SPOE will ease this
+kind of processing, or we hope so.
+
+Now, the aim of SPOE is to allow any kind of offloading on the streams. First
+releases won&#x27;t do lot of things. As we will see, there are few handled events
+and even less actions supported. Actually, for now, the SPOE can offload the
+processing before &quot;tcp-request content&quot;, &quot;tcp-response content&quot;, &quot;http-request&quot;
+and &quot;http-response&quot; rules. And it only supports variables definition. But, in
+spite of these limited features, we can easily imagine to implement SSO
+solution, ip reputation or ip geolocation services.
+
+Some example implementations in various languages are linked to from the
+HAProxy Wiki page dedicated to this mechanism:
+
+ https://github.com/haproxy/wiki/wiki/SPOE:-Stream-Processing-Offloading-Engine
+</pre></div>
+<a class="anchor" id="2" name="2"></a>
+<div class="page-header"><h1 id="chapter-2" data-target="2"><small><a class="small" href="#2">2.</a></small> SPOE configuration</h1>
+</div><div><pre class="text">Because SPOE is implemented as a filter, To use it, you must declare a &quot;filter
+spoe&quot; line in a proxy section (frontend/backend/listen) :
+
+  frontend my-front
+      ...
+      filter spoe [engine &lt;name&gt;] config &lt;file&gt;
+      ...
+
+The &quot;config&quot; parameter is mandatory. It specififies the SPOE configuration
+file. The engine name is optional. It can be set to declare the scope to use in
+the SPOE configuration. So it is possible to use the same SPOE configuration
+for several engines. If no name is provided, the SPOE configuration must not
+contain any scope directive.
+
+We use a separate configuration file on purpose. By commenting SPOE filter
+line, you completely disable the feature, including the parsing of sections
+reserved to SPOE. This is also a way to keep the HAProxy configuration clean.
+
+A SPOE configuration file must contains, at least, the SPOA configuration
+(&quot;<a href="#spoe-agent">spoe-agent</a>&quot; section) and SPOE messages/groups (&quot;<a href="#spoe-message">spoe-message</a>&quot; or &quot;<a href="#spoe-group">spoe-group</a>&quot;
+sections) attached to this agent.
+
+IMPORTANT : The configuration of a SPOE filter must be located in a dedicated
+file. But the backend used by a SPOA must be declared in HAProxy configuration
+file.
+</pre></div>
+<a class="anchor" id="2.1" name="2.1"></a>
+<h2 id="chapter-2.1" data-target="2.1"><small><a class="small" href="#2.1">2.1.</a></small> SPOE scope</h2>
+<div><pre class="text">If you specify an engine name on the SPOE filter line, then you need to define
+scope in the SPOE configuration with the same name. You can have several SPOE
+scope in the same file. In each scope, you must define one and only one
+&quot;<a href="#spoe-agent">spoe-agent</a>&quot; section to configure the SPOA linked to your SPOE and several
+&quot;<a href="#spoe-message">spoe-message</a>&quot; and &quot;<a href="#spoe-group">spoe-group</a>&quot; sections to describe, respectively, messages and
+group of messages sent to servers mananged by your SPOA.
+
+A SPOE scope starts with this kind of line :
+
+  [&lt;name&gt;]
+</pre><a class="anchor" name="where"></a><a class="anchor" name="2-where"></a><a class="anchor" name="2.1-where"></a><a class="anchor" name="where (SPOE configuration)"></a><a class="anchor" name="where (SPOE scope)"></a><div class="keyword"><b><a class="anchor" name="where"></a><a href="#2.1-where">where</a></b> <span style="color: #080">&lt;name&gt;</span> is the same engine name specified on the SPOE filter line. The</div><pre class="text">scope ends when the file ends or when another scope is found.
+</pre><div class="separator">
+<span class="label label-success">Example :</span>
+<pre class="prettyprint">
+<code>[my-first-engine]
+    spoe-agent my-agent
+        ...
+    spoe-message msg1
+        ...
+    spoe-message msg2
+        ...
+    spoe-group grp1
+        ...
+    spoe-group grp2
+        ...
+
+[my-second-engine]
+    ...
+</code></pre>
+</div><pre class="text">If no engine name is provided on the SPOE filter line, no SPOE scope must be
+found in the SPOE configuration file. All the file is considered to be in the
+same anonymous and implicit scope.
+
+The engine name must be uniq for a proxy. If no engine name is provided on the
+SPOE filter line, the SPOE agent name is used by default.
+</pre></div>
+<a class="anchor" id="2.2" name="2.2"></a>
+<h2 id="chapter-2.2" data-target="2.2"><small><a class="small" href="#2.2">2.2.</a></small> &quot;<a href="#spoe-agent">spoe-agent</a>&quot; section</h2>
+<div><pre class="text">For each engine, you must define one and only one &quot;<a href="#spoe-agent">spoe-agent</a>&quot; section. In this
+section, you will declare SPOE messages and the backend you will use. You will
+also set timeouts and options to customize your agent&#x27;s behaviour.
+</pre><a class="anchor" name="spoe-agent"></a><a class="anchor" name="2-spoe-agent"></a><a class="anchor" name="2.2-spoe-agent"></a><a class="anchor" name="spoe-agent (SPOE configuration)"></a><a class="anchor" name="spoe-agent ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="spoe-agent"></a><a href="#2.2-spoe-agent">spoe-agent</a></b> <span style="color: #080">&lt;name&gt;</span></div><pre class="text">Create a new SPOA with the name &lt;name&gt;. It must have one and only one
+&quot;<a href="#spoe-agent">spoe-agent</a>&quot; definition by SPOE scope.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;name&gt;   is the name of the agent section.</pre>
+</div>
+<pre class="text">following keywords are supported :
+  - <a href="#groups">groups</a>
+  - <a href="#log">log</a>
+  - <a href="#maxconnrate">maxconnrate</a>
+  - <a href="#maxerrrate">maxerrrate</a>
+  - <a href="#max-frame-size">max-frame-size</a>
+  - <a href="#max-waiting-frames">max-waiting-frames</a>
+  - <a href="#messages">messages</a>
+  - [no] option async
+  - [no] option dontlog-normal
+  - [no] option pipelining
+  - [no] option send-frag-payload
+  - <a href="#option%20continue-on-error">option continue-on-error</a>
+  - <a href="#option%20force-set-var">option force-set-var</a>
+  - <a href="#option%20set-on-error">option set-on-error</a>
+  - <a href="#option%20set-process-time">option set-process-time</a>
+  - <a href="#option%20set-total-time">option set-total-time</a>
+  - <a href="#option%20var-prefix">option var-prefix</a>
+  - <a href="#register-var-names">register-var-names</a>
+  - timeout hello|idle|processing
+  - <a href="#use-backend">use-backend</a>
+</pre><a class="anchor" name="groups"></a><a class="anchor" name="2-groups"></a><a class="anchor" name="2.2-groups"></a><a class="anchor" name="groups (SPOE configuration)"></a><a class="anchor" name="groups ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="groups"></a><a href="#2.2-groups">groups</a></b> <span style="color: #080">&lt;grp-name&gt;</span> ...</div><pre class="text">Declare the list of SPOE groups that an agent will handle.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;grp-name&gt;   is the name of a SPOE group.</pre>
+</div>
+<pre class="text">Groups declared here must be found in the same engine scope, else an error is
+triggered during the configuration parsing. You can have many &quot;<a href="#groups">groups</a>&quot; lines.
+</pre><div class="page-header"><b>See also:</b> &quot;<a href="#spoe-group">spoe-group</a>&quot; section.</div>
+<a class="anchor" name="log"></a><a class="anchor" name="2-log"></a><a class="anchor" name="2.2-log"></a><a class="anchor" name="log (SPOE configuration)"></a><a class="anchor" name="log ("spoe-agent" section)"></a><a class="anchor" name="log global"></a><a class="anchor" name="2-log global"></a><a class="anchor" name="2.2-log global"></a><a class="anchor" name="log global (SPOE configuration)"></a><a class="anchor" name="log global ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="log global"></a><a href="#2.2-log%20global">log global</a></b></div><a class="anchor" name="log"></a><a class="anchor" name="2-log"></a><a class="anchor" name="2.2-log"></a><a class="anchor" name="log (SPOE configuration)"></a><a class="anchor" name="log ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="log"></a><a href="#2.2-log">log</a></b> <span style="color: #080">&lt;address&gt;</span> <span style="color: #008">[len <span style="color: #080">&lt;length&gt;</span>]</span> <span style="color: #008">[format <span style="color: #080">&lt;format&gt;</span>]</span> <span style="color: #080">&lt;facility&gt;</span> <span style="color: #008">[<span style="color: #080">&lt;level&gt;</span> <span style="color: #008">[<span style="color: #080">&lt;minlevel&gt;</span>]</span>]</span></div><a class="anchor" name="no"></a><a class="anchor" name="2-no"></a><a class="anchor" name="2.2-no"></a><a class="anchor" name="no (SPOE configuration)"></a><a class="anchor" name="no ("spoe-agent" section)"></a><a class="anchor" name="no log"></a><a class="anchor" name="2-no log"></a><a class="anchor" name="2.2-no log"></a><a class="anchor" name="no log (SPOE configuration)"></a><a class="anchor" name="no log ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="no log"></a><a href="#2.2-no%20log">no log</a></b></div><pre class="text">Enable per-instance logging of events and traffic.
+
+Prefix :
+  no         should be used when the logger list must be flushed.
+
+See the HAProxy Configuration Manual for details about this option.
+</pre><a class="anchor" name="maxconnrate"></a><a class="anchor" name="2-maxconnrate"></a><a class="anchor" name="2.2-maxconnrate"></a><a class="anchor" name="maxconnrate (SPOE configuration)"></a><a class="anchor" name="maxconnrate ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="maxconnrate"></a><a href="#2.2-maxconnrate">maxconnrate</a></b> <span style="color: #080">&lt;number&gt;</span></div><pre class="text">Set the maximum number of connections per second to &lt;number&gt;. The SPOE will
+stop to open new connections if the maximum is reached and will wait to
+acquire an existing one. So it is important to set &quot;<a href="#timeout%20hello">timeout hello</a>&quot; to a
+relatively small value.
+</pre><a class="anchor" name="maxerrrate"></a><a class="anchor" name="2-maxerrrate"></a><a class="anchor" name="2.2-maxerrrate"></a><a class="anchor" name="maxerrrate (SPOE configuration)"></a><a class="anchor" name="maxerrrate ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="maxerrrate"></a><a href="#2.2-maxerrrate">maxerrrate</a></b> <span style="color: #080">&lt;number&gt;</span></div><pre class="text">Set the maximum number of errors per second to &lt;number&gt;. The SPOE will stop
+its processing if the maximum is reached.
+</pre><a class="anchor" name="max-frame-size"></a><a class="anchor" name="2-max-frame-size"></a><a class="anchor" name="2.2-max-frame-size"></a><a class="anchor" name="max-frame-size (SPOE configuration)"></a><a class="anchor" name="max-frame-size ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="max-frame-size"></a><a href="#2.2-max-frame-size">max-frame-size</a></b> <span style="color: #080">&lt;number&gt;</span></div><pre class="text">Set the maximum allowed size for frames exchanged between HAProxy and SPOA.
+It must be in the range [256, tune.bufsize-4] (4 bytes are reserved for the
+frame length). By default, it is set to (tune.bufsize-4).
+</pre><a class="anchor" name="max-waiting-frames"></a><a class="anchor" name="2-max-waiting-frames"></a><a class="anchor" name="2.2-max-waiting-frames"></a><a class="anchor" name="max-waiting-frames (SPOE configuration)"></a><a class="anchor" name="max-waiting-frames ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="max-waiting-frames"></a><a href="#2.2-max-waiting-frames">max-waiting-frames</a></b> <span style="color: #080">&lt;number&gt;</span></div><pre class="text">Set the maximum number of frames waiting for an acknowledgement on the same
+connection. This value is only used when the pipelinied or asynchronus
+exchanges between HAProxy and SPOA are enabled. By default, it is set to 20.
+</pre><a class="anchor" name="messages"></a><a class="anchor" name="2-messages"></a><a class="anchor" name="2.2-messages"></a><a class="anchor" name="messages (SPOE configuration)"></a><a class="anchor" name="messages ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="messages"></a><a href="#2.2-messages">messages</a></b> <span style="color: #080">&lt;msg-name&gt;</span> ...</div><pre class="text">Declare the list of SPOE messages that an agent will handle.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;msg-name&gt;   is the name of a SPOE message.</pre>
+</div>
+<pre class="text">Messages declared here must be found in the same engine scope, else an error
+is triggered during the configuration parsing. You can have many &quot;<span class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">messages<span class="caret"></span></a><ul class="dropdown-menu"><li class="dropdown-header">This keyword is available in sections :</li><li><a href="#messages%20%28%22spoe-agent%22%20section%29">"spoe-agent" section</a></li><li><a href="#messages%20%28%22spoe-group%22%20section%29">"spoe-group" section</a></li></ul></span>&quot;
+lines.
+</pre><div class="page-header"><b>See also:</b> &quot;<a href="#spoe-message">spoe-message</a>&quot; section.</div>
+<a class="anchor" name="option"></a><a class="anchor" name="2-option"></a><a class="anchor" name="2.2-option"></a><a class="anchor" name="option (SPOE configuration)"></a><a class="anchor" name="option ("spoe-agent" section)"></a><a class="anchor" name="option async"></a><a class="anchor" name="2-option async"></a><a class="anchor" name="2.2-option async"></a><a class="anchor" name="option async (SPOE configuration)"></a><a class="anchor" name="option async ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="option async"></a><a href="#2.2-option%20async">option async</a></b></div><a class="anchor" name="no"></a><a class="anchor" name="2-no"></a><a class="anchor" name="2.2-no"></a><a class="anchor" name="no (SPOE configuration)"></a><a class="anchor" name="no ("spoe-agent" section)"></a><a class="anchor" name="no option"></a><a class="anchor" name="2-no option"></a><a class="anchor" name="2.2-no option"></a><a class="anchor" name="no option (SPOE configuration)"></a><a class="anchor" name="no option ("spoe-agent" section)"></a><a class="anchor" name="no option async"></a><a class="anchor" name="2-no option async"></a><a class="anchor" name="2.2-no option async"></a><a class="anchor" name="no option async (SPOE configuration)"></a><a class="anchor" name="no option async ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="no option async"></a><a href="#2.2-no%20option%20async">no option async</a></b></div><pre class="text">Enable or disable the support of asynchronus exchanges between HAProxy and
+SPOA. By default, this option is enabled.
+</pre><a class="anchor" name="option"></a><a class="anchor" name="2-option"></a><a class="anchor" name="2.2-option"></a><a class="anchor" name="option (SPOE configuration)"></a><a class="anchor" name="option ("spoe-agent" section)"></a><a class="anchor" name="option continue-on-error"></a><a class="anchor" name="2-option continue-on-error"></a><a class="anchor" name="2.2-option continue-on-error"></a><a class="anchor" name="option continue-on-error (SPOE configuration)"></a><a class="anchor" name="option continue-on-error ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="option continue-on-error"></a><a href="#2.2-option%20continue-on-error">option continue-on-error</a></b></div><pre class="text">Do not stop the events processing when an error occurred on a stream.
+
+By default, for a specific stream, when an abnormal/unexpected error occurs,
+the SPOE is disabled for all the transaction. So if you have several events
+configured, such error on an event will disabled all following. For TCP
+streams, this will disable the SPOE for the whole session. For HTTP streams,
+this will disable it for the transaction (request and response).
+
+When set, this option bypass this behaviour and only the current event will
+be ignored.
+</pre><a class="anchor" name="option"></a><a class="anchor" name="2-option"></a><a class="anchor" name="2.2-option"></a><a class="anchor" name="option (SPOE configuration)"></a><a class="anchor" name="option ("spoe-agent" section)"></a><a class="anchor" name="option dontlog-normal"></a><a class="anchor" name="2-option dontlog-normal"></a><a class="anchor" name="2.2-option dontlog-normal"></a><a class="anchor" name="option dontlog-normal (SPOE configuration)"></a><a class="anchor" name="option dontlog-normal ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="option dontlog-normal"></a><a href="#2.2-option%20dontlog-normal">option dontlog-normal</a></b></div><a class="anchor" name="no"></a><a class="anchor" name="2-no"></a><a class="anchor" name="2.2-no"></a><a class="anchor" name="no (SPOE configuration)"></a><a class="anchor" name="no ("spoe-agent" section)"></a><a class="anchor" name="no option"></a><a class="anchor" name="2-no option"></a><a class="anchor" name="2.2-no option"></a><a class="anchor" name="no option (SPOE configuration)"></a><a class="anchor" name="no option ("spoe-agent" section)"></a><a class="anchor" name="no option dontlog-normal"></a><a class="anchor" name="2-no option dontlog-normal"></a><a class="anchor" name="2.2-no option dontlog-normal"></a><a class="anchor" name="no option dontlog-normal (SPOE configuration)"></a><a class="anchor" name="no option dontlog-normal ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="no option dontlog-normal"></a><a href="#2.2-no%20option%20dontlog-normal">no option dontlog-normal</a></b></div><pre class="text">Enable or disable logging of normal, successful processing.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span> none
+</div>
+<div class="page-header"><b>See also:</b> &quot;<a href="#log">log</a>&quot; and <a href="#4">section 4</a> about logging.</div>
+<a class="anchor" name="option"></a><a class="anchor" name="2-option"></a><a class="anchor" name="2.2-option"></a><a class="anchor" name="option (SPOE configuration)"></a><a class="anchor" name="option ("spoe-agent" section)"></a><a class="anchor" name="option force-set-var"></a><a class="anchor" name="2-option force-set-var"></a><a class="anchor" name="2.2-option force-set-var"></a><a class="anchor" name="option force-set-var (SPOE configuration)"></a><a class="anchor" name="option force-set-var ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="option force-set-var"></a><a href="#2.2-option%20force-set-var">option force-set-var</a></b></div><pre class="text">By default, SPOE filter only register already known variables (mainly from
+parsing of the configuration). If you want that haproxy trusts the agent and
+registers all variables (ex: can be useful for LUA workload), activate this
+option.
+
+Caution : this option opens to a variety of attacks such as a rogue SPOA that
+asks to register too many variables.
+</pre><a class="anchor" name="option"></a><a class="anchor" name="2-option"></a><a class="anchor" name="2.2-option"></a><a class="anchor" name="option (SPOE configuration)"></a><a class="anchor" name="option ("spoe-agent" section)"></a><a class="anchor" name="option pipelining"></a><a class="anchor" name="2-option pipelining"></a><a class="anchor" name="2.2-option pipelining"></a><a class="anchor" name="option pipelining (SPOE configuration)"></a><a class="anchor" name="option pipelining ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="option pipelining"></a><a href="#2.2-option%20pipelining">option pipelining</a></b></div><a class="anchor" name="no"></a><a class="anchor" name="2-no"></a><a class="anchor" name="2.2-no"></a><a class="anchor" name="no (SPOE configuration)"></a><a class="anchor" name="no ("spoe-agent" section)"></a><a class="anchor" name="no option"></a><a class="anchor" name="2-no option"></a><a class="anchor" name="2.2-no option"></a><a class="anchor" name="no option (SPOE configuration)"></a><a class="anchor" name="no option ("spoe-agent" section)"></a><a class="anchor" name="no option pipelining"></a><a class="anchor" name="2-no option pipelining"></a><a class="anchor" name="2.2-no option pipelining"></a><a class="anchor" name="no option pipelining (SPOE configuration)"></a><a class="anchor" name="no option pipelining ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="no option pipelining"></a><a href="#2.2-no%20option%20pipelining">no option pipelining</a></b></div><pre class="text">Enable or disable the support of pipelined exchanges between HAProxy and
+SPOA. By default, this option is enabled.
+</pre><a class="anchor" name="option"></a><a class="anchor" name="2-option"></a><a class="anchor" name="2.2-option"></a><a class="anchor" name="option (SPOE configuration)"></a><a class="anchor" name="option ("spoe-agent" section)"></a><a class="anchor" name="option send-frag-payload"></a><a class="anchor" name="2-option send-frag-payload"></a><a class="anchor" name="2.2-option send-frag-payload"></a><a class="anchor" name="option send-frag-payload (SPOE configuration)"></a><a class="anchor" name="option send-frag-payload ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="option send-frag-payload"></a><a href="#2.2-option%20send-frag-payload">option send-frag-payload</a></b></div><a class="anchor" name="no"></a><a class="anchor" name="2-no"></a><a class="anchor" name="2.2-no"></a><a class="anchor" name="no (SPOE configuration)"></a><a class="anchor" name="no ("spoe-agent" section)"></a><a class="anchor" name="no option"></a><a class="anchor" name="2-no option"></a><a class="anchor" name="2.2-no option"></a><a class="anchor" name="no option (SPOE configuration)"></a><a class="anchor" name="no option ("spoe-agent" section)"></a><a class="anchor" name="no option send-frag-payload"></a><a class="anchor" name="2-no option send-frag-payload"></a><a class="anchor" name="2.2-no option send-frag-payload"></a><a class="anchor" name="no option send-frag-payload (SPOE configuration)"></a><a class="anchor" name="no option send-frag-payload ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="no option send-frag-payload"></a><a href="#2.2-no%20option%20send-frag-payload">no option send-frag-payload</a></b></div><pre class="text">Enable or disable the sending of fragmented payload to SPOA. By default, this
+option is enabled.
+</pre><a class="anchor" name="option"></a><a class="anchor" name="2-option"></a><a class="anchor" name="2.2-option"></a><a class="anchor" name="option (SPOE configuration)"></a><a class="anchor" name="option ("spoe-agent" section)"></a><a class="anchor" name="option set-on-error"></a><a class="anchor" name="2-option set-on-error"></a><a class="anchor" name="2.2-option set-on-error"></a><a class="anchor" name="option set-on-error (SPOE configuration)"></a><a class="anchor" name="option set-on-error ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="option set-on-error"></a><a href="#2.2-option%20set-on-error">option set-on-error</a></b> <span style="color: #080">&lt;var name&gt;</span></div><pre class="text">Define the variable to set when an error occurred during an event processing.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;var name&gt;   is the variable name, without the scope. The name may only
+             contain characters &#x27;a-z&#x27;, &#x27;A-Z&#x27;, &#x27;0-9&#x27;, &#x27;.&#x27; and &#x27;_&#x27;.</pre>
+</div>
+<pre class="text">This variable will only be set when an error occurred in the scope of the
+transaction. As for all other variables define by the SPOE, it will be
+prefixed. So, if your variable name is &quot;error&quot; and your prefix is
+&quot;my_spoe_pfx&quot;, the variable will be &quot;txn.my_spoe_pfx.error&quot;.
+
+When set, the variable is an integer representing the error reason. For values
+under 256, it represents an error coming from the engine. Below 256, it
+reports a SPOP error. In this case, to retrieve the right SPOP status code,
+you must remove 256 to this value. Here are possible values:
+
+  * 1       a timeout occurred during the event processing.
+
+  * 2       an error was triggered during the resources allocation.
+
+  * 3       the frame payload exceeds the frame size and it cannot be
+            fragmented.
+
+  * 4       the fragmentation of a payload is aborted.
+
+  * 5       The frame processing has been interrupted by HAProxy.
+
+  * 255     an unknown error occurred during the event processing.
+
+  * 256+N   a SPOP error occurred during the event processing (see section
+            &quot;Errors &amp; timeouts&quot;).
+
+Note that if &quot;<a href="#option%20continue-on-error">option continue-on-error</a>&quot; is set, the variable is not
+automatically removed between events processing.
+</pre><div class="page-header"><b>See also:</b> &quot;<a href="#option%20continue-on-error">option continue-on-error</a>&quot;, &quot;<a href="#option%20var-prefix">option var-prefix</a>&quot;.</div>
+<a class="anchor" name="option"></a><a class="anchor" name="2-option"></a><a class="anchor" name="2.2-option"></a><a class="anchor" name="option (SPOE configuration)"></a><a class="anchor" name="option ("spoe-agent" section)"></a><a class="anchor" name="option set-process-time"></a><a class="anchor" name="2-option set-process-time"></a><a class="anchor" name="2.2-option set-process-time"></a><a class="anchor" name="option set-process-time (SPOE configuration)"></a><a class="anchor" name="option set-process-time ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="option set-process-time"></a><a href="#2.2-option%20set-process-time">option set-process-time</a></b> <span style="color: #080">&lt;var name&gt;</span></div><pre class="text">Define the variable to set to report the processing time of the last event or
+group.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;var name&gt;   is the variable name, without the scope. The name may only
+             contain characters &#x27;a-z&#x27;, &#x27;A-Z&#x27;, &#x27;0-9&#x27;, &#x27;.&#x27; and &#x27;_&#x27;.</pre>
+</div>
+<pre class="text">This variable will be set in the scope of the transaction. As for all other
+variables define by the SPOE, it will be prefixed. So, if your variable name
+is &quot;process_time&quot; and your prefix is &quot;my_spoe_pfx&quot;, the variable will be
+&quot;txn.my_spoe_pfx.process_time&quot;.
+
+When set, the variable is an integer representing the delay to process the
+event or the group, in milliseconds. From the stream point of view, it is the
+latency added by the SPOE processing for the last handled event or group.
+
+If several events or groups are processed for the same stream, this value
+will be overrideen.
+</pre><div class="page-header"><b>See also:</b> &quot;<a href="#option%20set-total-time">option set-total-time</a>&quot;.</div>
+<a class="anchor" name="option"></a><a class="anchor" name="2-option"></a><a class="anchor" name="2.2-option"></a><a class="anchor" name="option (SPOE configuration)"></a><a class="anchor" name="option ("spoe-agent" section)"></a><a class="anchor" name="option set-total-time"></a><a class="anchor" name="2-option set-total-time"></a><a class="anchor" name="2.2-option set-total-time"></a><a class="anchor" name="option set-total-time (SPOE configuration)"></a><a class="anchor" name="option set-total-time ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="option set-total-time"></a><a href="#2.2-option%20set-total-time">option set-total-time</a></b> <span style="color: #080">&lt;var name&gt;</span></div><pre class="text">Define the variable to set to report the total processing time SPOE for a
+stream.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;var name&gt;   is the variable name, without the scope. The name may only
+             contain characters &#x27;a-z&#x27;, &#x27;A-Z&#x27;, &#x27;0-9&#x27;, &#x27;.&#x27; and &#x27;_&#x27;.</pre>
+</div>
+<pre class="text">This variable will be set in the scope of the transaction. As for all other
+variables define by the SPOE, it will be prefixed. So, if your variable name
+is &quot;total_time&quot; and your prefix is &quot;my_spoe_pfx&quot;, the variable will be
+&quot;txn.my_spoe_pfx.total_time&quot;.
+
+When set, the variable is an integer representing the sum of processing times
+for a stream, in milliseconds. From the stream point of view, it is the
+latency added by the SPOE processing.
+
+If several events or groups are processed for the same stream, this value
+will be updated.
+</pre><div class="page-header"><b>See also:</b> &quot;<a href="#option%20set-process-time">option set-process-time</a>&quot;.</div>
+<a class="anchor" name="option"></a><a class="anchor" name="2-option"></a><a class="anchor" name="2.2-option"></a><a class="anchor" name="option (SPOE configuration)"></a><a class="anchor" name="option ("spoe-agent" section)"></a><a class="anchor" name="option var-prefix"></a><a class="anchor" name="2-option var-prefix"></a><a class="anchor" name="2.2-option var-prefix"></a><a class="anchor" name="option var-prefix (SPOE configuration)"></a><a class="anchor" name="option var-prefix ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="option var-prefix"></a><a href="#2.2-option%20var-prefix">option var-prefix</a></b> <span style="color: #080">&lt;prefix&gt;</span></div><pre class="text">Define the prefix used when variables are set by an agent.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;prefix&gt;   is the prefix used to limit the scope of variables set by an
+           agent.</pre>
+</div>
+<pre class="text">To avoid conflict with other variables defined by HAProxy, all variables
+names will be prefixed. By default, the &quot;<a href="#spoe-agent">spoe-agent</a>&quot; name is used. This
+option can be used to customize it.
+
+The prefix will be added between the variable scope and its name, separated
+by a &#x27;.&#x27;. It may only contain characters &#x27;a-z&#x27;, &#x27;A-Z&#x27;, &#x27;0-9&#x27;, &#x27;.&#x27; and &#x27;_&#x27;, as
+for variables name. In HAProxy configuration, you need to use this prefix as
+a part of the variables name. For example, if an agent define the variable
+&quot;myvar&quot; in the &quot;txn&quot; scope, with the prefix &quot;my_spoe_pfx&quot;, then you should
+use &quot;txn.my_spoe_pfx.myvar&quot; name in your HAProxy configuration.
+
+By default, an agent will never set new variables at runtime: It can only set
+new value for existing ones. If you want a different behaviour, see
+force-set-var option and register-var-names directive.
+</pre><a class="anchor" name="register-var-names"></a><a class="anchor" name="2-register-var-names"></a><a class="anchor" name="2.2-register-var-names"></a><a class="anchor" name="register-var-names (SPOE configuration)"></a><a class="anchor" name="register-var-names ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="register-var-names"></a><a href="#2.2-register-var-names">register-var-names</a></b> <span style="color: #080">&lt;var name&gt;</span> ...</div><pre class="text">Register some variable names. By default, an agent will not be allowed to set
+new variables at runtime. This rule can be totally relaxed by setting the
+option &quot;<a href="#option%20force-set-var">force-set-var</a>&quot;. If you know all the variables you will need, this
+directive is a good way to register them without letting an agent doing what
+it want. This is only required if these variables are not referenced anywhere
+in the HAProxy configuration or the SPOE one.
+</pre><div class="separator">
+<span class="label label-info">Arguments:</span><pre class="prettyprint arguments">&lt;var name&gt;   is a variable name without the scope. The name may only
+             contain characters &#x27;a-z&#x27;, &#x27;A-Z&#x27;, &#x27;0-9&#x27;, &#x27;.&#x27; and &#x27;_&#x27;.</pre>
+</div>
+<pre class="text">The prefix will be automatically added during the registration. You can have
+many &quot;<a href="#register-var-names">register-var-names</a>&quot; lines.
+</pre><div class="page-header"><b>See also:</b> &quot;<a href="#option%20force-set-var">option force-set-var</a>&quot;, &quot;<a href="#option%20var-prefix">option var-prefix</a>&quot;.</div>
+<a class="anchor" name="timeout"></a><a class="anchor" name="2-timeout"></a><a class="anchor" name="2.2-timeout"></a><a class="anchor" name="timeout (SPOE configuration)"></a><a class="anchor" name="timeout ("spoe-agent" section)"></a><a class="anchor" name="timeout hello"></a><a class="anchor" name="2-timeout hello"></a><a class="anchor" name="2.2-timeout hello"></a><a class="anchor" name="timeout hello (SPOE configuration)"></a><a class="anchor" name="timeout hello ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="timeout hello"></a><a href="#2.2-timeout%20hello">timeout hello</a></b> <span style="color: #080">&lt;timeout&gt;</span></div><pre class="text">Set the maximum time to wait for an agent to receive the AGENT-HELLO frame.
+It is applied on the stream that handle the connection with the agent.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;timeout&gt;   is the timeout value specified in milliseconds by default, but
+            can be in any other unit if the number is suffixed by the unit,
+            as explained at the top of this document.</pre>
+</div>
+<pre class="text">This timeout is an applicative timeout. It differ from &quot;timeout connect&quot;
+defined on backends.
+</pre><a class="anchor" name="timeout"></a><a class="anchor" name="2-timeout"></a><a class="anchor" name="2.2-timeout"></a><a class="anchor" name="timeout (SPOE configuration)"></a><a class="anchor" name="timeout ("spoe-agent" section)"></a><a class="anchor" name="timeout idle"></a><a class="anchor" name="2-timeout idle"></a><a class="anchor" name="2.2-timeout idle"></a><a class="anchor" name="timeout idle (SPOE configuration)"></a><a class="anchor" name="timeout idle ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="timeout idle"></a><a href="#2.2-timeout%20idle">timeout idle</a></b> <span style="color: #080">&lt;timeout&gt;</span></div><pre class="text">Set the maximum time to wait for an agent to close an idle connection. It is
+applied on the stream that handle the connection with the agent.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;timeout&gt;   is the timeout value specified in milliseconds by default, but
+            can be in any other unit if the number is suffixed by the unit,
+            as explained at the top of this document.</pre>
+</div>
+<a class="anchor" name="timeout"></a><a class="anchor" name="2-timeout"></a><a class="anchor" name="2.2-timeout"></a><a class="anchor" name="timeout (SPOE configuration)"></a><a class="anchor" name="timeout ("spoe-agent" section)"></a><a class="anchor" name="timeout processing"></a><a class="anchor" name="2-timeout processing"></a><a class="anchor" name="2.2-timeout processing"></a><a class="anchor" name="timeout processing (SPOE configuration)"></a><a class="anchor" name="timeout processing ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="timeout processing"></a><a href="#2.2-timeout%20processing">timeout processing</a></b> <span style="color: #080">&lt;timeout&gt;</span></div><pre class="text">Set the maximum time to wait for a stream to process an event, i.e to acquire
+a stream to talk with an agent, to encode all messages, to send the NOTIFY
+frame, to receive the corresponding acknowledgement and to process all
+actions. It is applied on the stream that handle the client and the server
+sessions.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;timeout&gt;   is the timeout value specified in milliseconds by default, but
+            can be in any other unit if the number is suffixed by the unit,
+            as explained at the top of this document.</pre>
+</div>
+<a class="anchor" name="use-backend"></a><a class="anchor" name="2-use-backend"></a><a class="anchor" name="2.2-use-backend"></a><a class="anchor" name="use-backend (SPOE configuration)"></a><a class="anchor" name="use-backend ("spoe-agent" section)"></a><div class="keyword"><b><a class="anchor" name="use-backend"></a><a href="#2.2-use-backend">use-backend</a></b> <span style="color: #080">&lt;backend&gt;</span></div><pre class="text">Specify the backend to use. It must be defined.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;backend&gt;   is the name of a valid &quot;backend&quot; section.</pre>
+</div>
+</div>
+<a class="anchor" id="2.3" name="2.3"></a>
+<h2 id="chapter-2.3" data-target="2.3"><small><a class="small" href="#2.3">2.3.</a></small> &quot;<a href="#spoe-message">spoe-message</a>&quot; section</h2>
+<div><pre class="text">To offload the stream processing, SPOE will send messages with specific
+information at a specific moment in the stream life and will wait for
+corresponding replies to know what to do.
+</pre><a class="anchor" name="spoe-message"></a><a class="anchor" name="2-spoe-message"></a><a class="anchor" name="2.3-spoe-message"></a><a class="anchor" name="spoe-message (SPOE configuration)"></a><a class="anchor" name="spoe-message ("spoe-message" section)"></a><div class="keyword"><b><a class="anchor" name="spoe-message"></a><a href="#2.3-spoe-message">spoe-message</a></b> <span style="color: #080">&lt;name&gt;</span></div><pre class="text">Create a new SPOE message with the name &lt;name&gt;.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;name&gt;   is the name of the SPOE message.</pre>
+</div>
+<pre class="text">Here you define a message that can be referenced in a &quot;<a href="#spoe-agent">spoe-agent</a>&quot;
+section. Following keywords are supported :
+  - <a href="#acl">acl</a>
+  - <a href="#args">args</a>
+  - <a href="#event">event</a>
+</pre><div class="page-header"><b>See also:</b> &quot;<a href="#spoe-agent">spoe-agent</a>&quot; section.</div>
+<a class="anchor" name="acl"></a><a class="anchor" name="2-acl"></a><a class="anchor" name="2.3-acl"></a><a class="anchor" name="acl (SPOE configuration)"></a><a class="anchor" name="acl ("spoe-message" section)"></a><div class="keyword"><b><a class="anchor" name="acl"></a><a href="#2.3-acl">acl</a></b> <span style="color: #080">&lt;aclname&gt;</span> <span style="color: #080">&lt;criterion&gt;</span> <span style="color: #008">[flags]</span> <span style="color: #008">[operator]</span> <span style="color: #080">&lt;value&gt;</span> ...</div><pre class="text">Declare or complete an access list.
+
+See <a href="#7">section 7</a> about ACL usage in the HAProxy Configuration Manual.
+</pre><a class="anchor" name="args"></a><a class="anchor" name="2-args"></a><a class="anchor" name="2.3-args"></a><a class="anchor" name="args (SPOE configuration)"></a><a class="anchor" name="args ("spoe-message" section)"></a><div class="keyword"><b><a class="anchor" name="args"></a><a href="#2.3-args">args</a></b> <span style="color: #008">[name=]</span><span style="color: #080">&lt;sample&gt;</span> ...</div><pre class="text">Define arguments passed into the SPOE message.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;sample&gt;   is a sample expression.</pre>
+</div>
+<pre class="text">When the message is processed, if a sample expression is not available, it is
+set to NULL. Arguments are processed in their declaration order and added in
+the message in that order. It is possible to declare named arguments.
+
+For example:
+  args frontend=fe_id src dst
+</pre><a class="anchor" name="event"></a><a class="anchor" name="2-event"></a><a class="anchor" name="2.3-event"></a><a class="anchor" name="event (SPOE configuration)"></a><a class="anchor" name="event ("spoe-message" section)"></a><div class="keyword"><b><a class="anchor" name="event"></a><a href="#2.3-event">event</a></b> <span style="color: #080">&lt;name&gt;</span> <span style="color: #008">[ <span style="color: #800">{ if | unless }</span> <span style="color: #080">&lt;condition&gt;</span> ]</span></div><pre class="text">Set the event that triggers sending of the message. It may optionally be
+followed by an ACL-based condition, in which case it will only be evaluated
+if the condition is true. A SPOE message can only be sent on one event. If
+several events are defined, only the last one is considered.
+
+ACL-based conditions are executed in the context of the stream that handle
+the client and the server connections.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;name&gt;      is the event name.
+&lt;condition&gt; is a standard ACL-based condition.</pre>
+</div>
+<pre class="text">Supported events are:
+  - on-client-session
+  - on-server-session
+  - on-frontend-tcp-request
+  - on-backend-tcp-request
+  - on-tcp-response
+  - on-frontend-http-request
+  - on-backend-http-request
+  - on-http-response
+
+See section &quot;Events &amp; Messages&quot; for more details about supported events.
+See <a href="#7">section 7</a> about ACL usage in the HAProxy Configuration Manual.
+</pre></div>
+<a class="anchor" id="2.4" name="2.4"></a>
+<h2 id="chapter-2.4" data-target="2.4"><small><a class="small" href="#2.4">2.4.</a></small> &quot;<a href="#spoe-group">spoe-group</a>&quot; section</h2>
+<div><pre class="text">This section can be used to declare a group of SPOE messages. Unlike messages
+referenced in a &quot;<a href="#spoe-agent">spoe-agent</a>&quot; section, messages inside a group are not sent on a
+specific event. The sending must be triggered by TCP or HTTP rules, from the
+HAProxy configuration.
+</pre><a class="anchor" name="spoe-group"></a><a class="anchor" name="2-spoe-group"></a><a class="anchor" name="2.4-spoe-group"></a><a class="anchor" name="spoe-group (SPOE configuration)"></a><a class="anchor" name="spoe-group ("spoe-group" section)"></a><div class="keyword"><b><a class="anchor" name="spoe-group"></a><a href="#2.4-spoe-group">spoe-group</a></b> <span style="color: #080">&lt;name&gt;</span></div><pre class="text">Create a new SPOE group with the name &lt;name&gt;.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;name&gt;   is the name of the SPOE group.</pre>
+</div>
+<pre class="text">Here you define a group of SPOE messages that can be referenced in a
+&quot;<a href="#spoe-agent">spoe-agent</a>&quot; section. Following keywords are supported :
+   - <a href="#messages">messages</a>
+</pre><div class="page-header"><b>See also:</b> &quot;<a href="#spoe-agent">spoe-agent</a>&quot; and &quot;<a href="#spoe-message">spoe-message</a>&quot; sections.</div>
+<a class="anchor" name="messages"></a><a class="anchor" name="2-messages"></a><a class="anchor" name="2.4-messages"></a><a class="anchor" name="messages (SPOE configuration)"></a><a class="anchor" name="messages ("spoe-group" section)"></a><div class="keyword"><b><a class="anchor" name="messages"></a><a href="#2.4-messages">messages</a></b> <span style="color: #080">&lt;msg-name&gt;</span> ...</div><pre class="text">Declare the list of SPOE messages belonging to the group.
+</pre><div class="separator">
+<span class="label label-info">Arguments :</span><pre class="prettyprint arguments">&lt;msg-name&gt;   is the name of a SPOE message.</pre>
+</div>
+<pre class="text">Messages declared here must be found in the same engine scope, else an error
+is triggered during the configuration parsing. Furthermore, a message belongs
+at most to a group. You can have many &quot;<span class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">messages<span class="caret"></span></a><ul class="dropdown-menu"><li class="dropdown-header">This keyword is available in sections :</li><li><a href="#messages%20%28%22spoe-agent%22%20section%29">"spoe-agent" section</a></li><li><a href="#messages%20%28%22spoe-group%22%20section%29">"spoe-group" section</a></li></ul></span>&quot; lines.
+</pre><div class="page-header"><b>See also:</b> &quot;<a href="#spoe-message">spoe-message</a>&quot; section.</div>
+</div>
+<a class="anchor" id="2.5" name="2.5"></a>
+<h2 id="chapter-2.5" data-target="2.5"><small><a class="small" href="#2.5">2.5.</a></small> Example</h2>
+<div><pre class="text">Here is a simple but complete example that sends client-ip address to a ip
+reputation service. This service can set the variable &quot;ip_score&quot; which is an
+integer between 0 and 100, indicating its reputation (100 means totally safe
+and 0 a blacklisted IP with no doubt).
+
+  ###
+  ### HAProxy configuration
+    frontend www
+        mode http
+        bind *:80
+
+        filter spoe engine ip-reputation config spoe-ip-reputation.conf
+
+        # Reject connection if the IP reputation is under 20
+        tcp-request content reject if  { var(sess.iprep.ip_score) -m int lt 20 }
+
+        default_backend http-servers
+
+    backend http-servers
+        mode http
+        server http A.B.C.D:80
+
+    backend iprep-servers
+        mode tcp
+        balance roundrobin
+
+        timeout connect 5s # greater than hello timeout
+        timeout server  3m # greater than idle timeout
+
+        server iprep1 A1.B1.C1.D1:12345
+        server iprep2 A2.B2.C2.D2:12345
+
+  ####
+  ### spoe-ip-reputation.conf
+    [ip-reputation]
+
+    spoe-agent iprep-agent
+        messages get-ip-reputation
+
+        option var-prefix iprep
+
+        timeout hello      2s
+        timeout idle       2m
+        timeout processing 10ms
+
+        use-backend iprep-servers
+
+    spoe-message get-ip-reputation
+        args ip=src
+        event on-client-session if ! { src -f /etc/haproxy/whitelist.lst }
+</pre></div>
+<a class="anchor" id="3" name="3"></a>
+<div class="page-header"><h1 id="chapter-3" data-target="3"><small><a class="small" href="#3">3.</a></small> SPOP specification</h1>
+</div><a class="anchor" id="3.1" name="3.1"></a>
+<h2 id="chapter-3.1" data-target="3.1"><small><a class="small" href="#3.1">3.1.</a></small> Data types</h2>
+<div><pre class="text">Here is the bytewise representation of typed data:
+
+    TYPED-DATA    : &lt;TYPE:4 bits&gt;&lt;FLAGS:4 bits&gt;&lt;DATA&gt;
+
+Supported types and their representation are:
+
+    TYPE                       |  ID | DESCRIPTION
+  -----------------------------+-----+----------------------------------
+     NULL                      |  0  |  NULL   : &lt;0&gt;
+     Boolean                   |  1  |  BOOL   : &lt;1+FLAG&gt;
+     32bits signed integer     |  2  |  INT32  : &lt;2&gt;&lt;VALUE:varint&gt;
+     32bits unsigned integer   |  3  |  UINT32 : &lt;3&gt;&lt;VALUE:varint&gt;
+     64bits signed integer     |  4  |  INT64  : &lt;4&gt;&lt;VALUE:varint&gt;
+     32bits unsigned integer   |  5  |  UNIT64 : &lt;5&gt;&lt;VALUE:varint&gt;
+     IPV4                      |  6  |  IPV4   : &lt;6&gt;&lt;STRUCT IN_ADDR:4 bytes&gt;
+     IPV6                      |  7  |  IPV6   : &lt;7&gt;&lt;STRUCT IN_ADDR6:16 bytes&gt;
+     String                    |  8  |  STRING : &lt;8&gt;&lt;LENGTH:varint&gt;&lt;BYTES&gt;
+     Binary                    |  9  |  BINARY : &lt;9&gt;&lt;LENGTH:varint&gt;&lt;BYTES&gt;
+    10 -&gt; 15  unused/reserved  |  -  |  -
+  -----------------------------+-----+----------------------------------
+
+Variable-length integer (varint) are encoded using Peers encoding:
+
+
+       0  &lt;= X &lt; 240        : 1 byte  (7.875 bits)  [ XXXX XXXX ]
+      240 &lt;= X &lt; 2288       : 2 bytes (11 bits)     [ 1111 XXXX ] [ 0XXX XXXX ]
+     2288 &lt;= X &lt; 264432     : 3 bytes (18 bits)     [ 1111 XXXX ] [ 1XXX XXXX ]   [ 0XXX XXXX ]
+   264432 &lt;= X &lt; 33818864   : 4 bytes (25 bits)     [ 1111 XXXX ] [ 1XXX XXXX ]*2 [ 0XXX XXXX ]
+ 33818864 &lt;= X &lt; 4328786160 : 5 bytes (32 bits)     [ 1111 XXXX ] [ 1XXX XXXX ]*3 [ 0XXX XXXX ]
+ ...
+
+For booleans, the value (true or false) is the first bit in the FLAGS
+bitfield. if this bit is set to 0, then the boolean is evaluated as false,
+otherwise, the boolean is evaluated as true.
+</pre></div>
+<a class="anchor" id="3.2" name="3.2"></a>
+<h2 id="chapter-3.2" data-target="3.2"><small><a class="small" href="#3.2">3.2.</a></small> Frames</h2>
+<div><pre class="text">Exchange between HAProxy and agents are made using FRAME packets. All frames
+must be prefixed with their size encoded on 4 bytes in network byte order:
+
+    &lt;FRAME-LENGTH:4 bytes&gt; &lt;FRAME&gt;
+
+A frame always starts with its type, on one byte, followed by metadata
+containing flags, on 4 bytes and a two variable-length integer representing the
+stream identifier and the frame identifier inside the stream:
+
+    FRAME       : &lt;FRAME-TYPE:1 byte&gt; &lt;METADATA&gt; &lt;FRAME-PAYLOAD&gt;
+    METADATA    : &lt;FLAGS:4 bytes&gt; &lt;STREAM-ID:varint&gt; &lt;FRAME-ID:varint&gt;
+
+Then comes the frame payload. Depending on the frame type, the payload can be
+of three types: a simple key/value list, a list of messages or a list of
+actions.
+
+    FRAME-PAYLOAD    : &lt;LIST-OF-MESSAGES&gt; | &lt;LIST-OF-ACTIONS&gt; | &lt;KV-LIST&gt;
+
+    LIST-OF-MESSAGES : [ &lt;MESSAGE-NAME&gt; &lt;NB-ARGS:1 byte&gt; &lt;KV-LIST&gt; ... ]
+    MESSAGE-NAME     : &lt;STRING&gt;
+
+    LIST-OF-ACTIONS  : [ &lt;ACTION-TYPE:1 byte&gt; &lt;NB-ARGS:1 byte&gt; &lt;ACTION-ARGS&gt; ... ]
+    ACTION-ARGS      : [ &lt;TYPED-DATA&gt;... ]
+
+    KV-LIST          : [ &lt;KV-NAME&gt; &lt;KV-VALUE&gt; ... ]
+    KV-NAME          : &lt;STRING&gt;
+    KV-VALUE         : &lt;TYPED-DATA&gt;
+
+    FLAGS :
+
+    Flags are a 32 bits field. They are encoded on 4 bytes in network byte
+    order, where the bit 0 is the LSB.
+
+              0   1      2-31
+            +---+---+----------+
+            |   | A |          |
+            | F | B |          |
+            | I | O | RESERVED |
+            | N | R |          |
+            |   | T |          |
+            +---+---+----------+
+
+    FIN: Indicates that this is the final payload fragment. The first fragment
+         may also be the final fragment.
+
+    ABORT: Indicates that the processing of the current frame must be
+           cancelled. This bit should be set on frames with a fragmented
+           payload. It can be ignore for frames with an unfragemnted
+           payload. When it is set, the FIN bit must also be set.
+
+
+Frames cannot exceed a maximum size negotiated between HAProxy and agents
+during the HELLO handshake. Most of time, payload will be small enough to send
+it in one frame. But when supported by the peer, it will be possible to
+fragment huge payload on many frames. This ability is announced during the
+HELLO handshake and it can be asynmetric (supported by agents but not by
+HAProxy or the opposite). The following rules apply to fragmentation:
+
+  * An unfragemnted payload consists of a single frame with the FIN bit set.
+
+  * A fragemented payload consists of several frames with the FIN bit clear and
+    terminated by a single frame with the FIN bit set. All these frames must
+    share the same STREAM-ID and FRAME-ID. The first frame must set the right
+    FRAME-TYPE (e.g, NOTIFY). The following frames must have an unset type (0).
+
+Beside the support of fragmented payload by a peer, some payload must not be
+fragmented. See below for details.
+
+IMPORTANT : The maximum size supported by peers for a frame must be greater
+than or equal to 256 bytes.
+</pre></div>
+<a class="anchor" id="3.2.1" name="3.2.1"></a>
+<h3 id="chapter-3.2.1" data-target="3.2.1"><small><a class="small" href="#3.2.1">3.2.1.</a></small> Frame capabilities</h3>
+<div><pre class="text">Here are the list of official capabilities that HAProxy and agents can support:
+
+  * fragmentation: This is the ability for a peer to support fragmented
+                   payload in received frames. This is an asymmectical
+                   capability, it only concerns the peer that announces
+                   it. This is the responsibility to the other peer to use it
+                   or not.
+
+  * pipelining: This is the ability for a peer to decouple NOTIFY and ACK
+                frames. This is a symmectical capability. To be used, it must
+                be supported by HAProxy and agents. Unlike HTTP pipelining, the
+                ACK frames can be send in any order, but always on the same TCP
+                connection used for the corresponding NOTIFY frame.
+
+  * async: This ability is similar to the pipelining, but here any TCP
+           connection established between HAProxy and the agent can be used to
+           send ACK frames. if an agent accepts connections from multiple
+           HAProxy, it can use the &quot;engine-id&quot; value to group TCP
+           connections. See details about HAPROXY-HELLO frame.
+
+Unsupported or unknown capabilities are silently ignored, when possible.
+
+NOTE: HAProxy does not support the fragmentation for now. This means it is not
+      able to handle fragmented frames. However, if an agent announces the
+      fragmentation support, HAProxy may choose to send fragemented frames.
+</pre></div>
+<a class="anchor" id="3.2.2" name="3.2.2"></a>
+<h3 id="chapter-3.2.2" data-target="3.2.2"><small><a class="small" href="#3.2.2">3.2.2.</a></small> Frame types overview</h3>
+<div><pre class="text">Here are types of frame supported by SPOE. Frames sent by HAProxy come first,
+then frames sent by agents :
+
+    TYPE                       |  ID | DESCRIPTION
+  -----------------------------+-----+-------------------------------------
+     UNSET                     |  0  | Used for all frames but the first when a
+                               |     | payload is fragmented.
+  -----------------------------+-----+-------------------------------------
+     HAPROXY-HELLO             |  1  |  Sent by HAProxy when it opens a
+                               |     |  connection on an agent.
+                               |     |
+     HAPROXY-DISCONNECT        |  2  |  Sent by HAProxy when it want to close
+                               |     |  the connection or in reply to an
+                               |     |  AGENT-DISCONNECT frame
+                               |     |
+     NOTIFY                    |  3  |  Sent by HAProxy to pass information
+                               |     |  to an agent
+  -----------------------------+-----+-------------------------------------
+     AGENT-HELLO               | 101 |  Reply to a HAPROXY-HELLO frame, when
+                               |     |  the connection is established
+                               |     |
+     AGENT-DISCONNECT          | 102 |  Sent by an agent just before closing
+                               |     |  the connection
+                               |     |
+     ACK                       | 103 |  Sent to acknowledge a NOTIFY frame
+  -----------------------------+-----+-------------------------------------
+
+Unknown frames may be silently skipped.
+</pre></div>
+<a class="anchor" id="3.2.3" name="3.2.3"></a>
+<h3 id="chapter-3.2.3" data-target="3.2.3"><small><a class="small" href="#3.2.3">3.2.3.</a></small> Workflow</h3>
+<div><pre class="text">* Successful HELLO handshake:
+
+  HAPROXY                       AGENT SRV
+     |       HAPROXY-HELLO         |
+     |    (healthcheck: false)     |
+     | --------------------------&gt; |
+     |                             |
+     |        AGENT-HELLO          |
+     | &lt;-------------------------- |
+     |                             |
+
+* Successful HELLO healthcheck:
+
+  HAPROXY                       AGENT SRV
+     |       HAPROXY-HELLO         |
+     |    (healthcheck: true)      |
+     | --------------------------&gt; |
+     |                             |
+     |   AGENT-HELLO + close()     |
+     | &lt;-------------------------- |
+     |                             |
+
+
+* Error encountered by agent during the HELLO handshake:
+
+  HAPROXY                       AGENT SRV
+     |       HAPROXY-HELLO         |
+     | --------------------------&gt; |
+     |                             |
+     |     DISCONNECT + close()    |
+     | &lt;-------------------------- |
+     |                             |
+
+* Error encountered by HAProxy during the HELLO handshake:
+
+  HAPROXY                       AGENT SRV
+     |       HAPROXY-HELLO         |
+     | --------------------------&gt; |
+     |                             |
+     |        AGENT-HELLO          |
+     | &lt;-------------------------- |
+     |                             |
+     |         DISCONNECT          |
+     | --------------------------&gt; |
+     |                             |
+     |     DISCONNECT + close()    |
+     | &lt;-------------------------- |
+     |                             |
+
+* Notify / Ack exchange (unfragmented payload):
+
+  HAPROXY                       AGENT SRV
+     |          NOTIFY             |
+     | --------------------------&gt; |
+     |                             |
+     |           ACK               |
+     | &lt;-------------------------- |
+     |                             |
+
+* Notify / Ack exchange (fragmented payload):
+
+  HAPROXY                       AGENT SRV
+     |      NOTIFY (frag 1)        |
+     | --------------------------&gt; |
+     |                             |
+     |       UNSET (frag 2)        |
+     | --------------------------&gt; |
+     |            ...              |
+     |       UNSET (frag N)        |
+     | --------------------------&gt; |
+     |                             |
+     |           ACK               |
+     | &lt;-------------------------- |
+     |                             |
+
+* Aborted fragmentation of a NOTIFY frame:
+
+  HAPROXY                       AGENT SRV
+     |            ...              |
+     |       UNSET (frag X)        |
+     | --------------------------&gt; |
+     |                             |
+     |         ACK/ABORT           |
+     | &lt;-------------------------- |
+     |                             |
+     |       UNSET (frag X+1)      |
+     | -----------X                |
+     |                             |
+     |                             |
+
+* Connection closed by haproxy:
+
+  HAPROXY                       AGENT SRV
+     |         DISCONNECT          |
+     | --------------------------&gt; |
+     |                             |
+     |     DISCONNECT + close()    |
+     | &lt;-------------------------- |
+     |                             |
+
+* Connection closed by agent:
+
+  HAPROXY                       AGENT SRV
+     |     DISCONNECT + close()    |
+     | &lt;-------------------------- |
+     |                             |
+</pre></div>
+<a class="anchor" id="3.2.4" name="3.2.4"></a>
+<h3 id="chapter-3.2.4" data-target="3.2.4"><small><a class="small" href="#3.2.4">3.2.4.</a></small> Frame: HAPROXY-HELLO</h3>
+<div><pre class="text">This frame is the first one exchanged between HAProxy and an agent, when the
+connection is established. The payload of this frame is a KV-LIST. It cannot be
+fragmented. STREAM-ID and FRAME-ID are must be set 0.
+
+Following items are mandatory in the KV-LIST:
+
+  * &quot;supported-versions&quot;    &lt;STRING&gt;
+
+    Last SPOP major versions supported by HAProxy. It is a comma-separated list
+    of versions, following the format &quot;Major.Minor&quot;. Spaces must be ignored, if
+    any. When a major version is announced by HAProxy, it means it also support
+    all previous minor versions.
+</pre><div class="separator">
+<span class="label label-success">Example:</span>
+<pre class="prettyprint">
+<div class="example-desc">&quot;2.0, 1.5&quot; means HAProxy supports SPOP 2.0 and 1.0 to 1.5</div><code></code></pre>
+</div><pre class="text">  * &quot;<a href="#max-frame-size">max-frame-size</a>&quot;    &lt;UINT32&gt;
+
+    This is the maximum size allowed for a frame. The HAPROXY-HELLO frame must
+    be lower or equal to this value.
+
+  * &quot;capabilities&quot;    &lt;STRING&gt;
+
+    This a comma-separated list of capabilities supported by HAProxy. Spaces
+    must be ignored, if any.
+
+Following optional items can be added in the KV-LIST:
+
+  * &quot;healthcheck&quot;    &lt;BOOLEAN&gt;
+
+    If this item is set to TRUE, then the HAPROXY-HELLO frame is sent during a
+    SPOE health check. When set to FALSE, this item can be ignored.
+
+  * &quot;engine-id&quot;    &lt;STRING&gt;
+
+    This is a uniq string that identify a SPOE engine.
+
+To finish the HELLO handshake, the agent must return an AGENT-HELLO frame with
+its supported SPOP version, the lower value between its maximum size allowed
+for a frame and the HAProxy one and capabilities it supports. If an error
+occurs or if an incompatibility is detected with the agent configuration, an
+AGENT-DISCONNECT frame must be returned.
+</pre></div>
+<a class="anchor" id="3.2.5" name="3.2.5"></a>
+<h3 id="chapter-3.2.5" data-target="3.2.5"><small><a class="small" href="#3.2.5">3.2.5.</a></small> Frame: AGENT-HELLO</h3>
+<div><pre class="text">This frame is sent in reply to a HAPROXY-HELLO frame to finish a HELLO
+handshake. As for HAPROXY-HELLO frame, STREAM-ID and FRAME-ID are also set
+0. The payload of this frame is a KV-LIST and it cannot be fragmented.
+
+Following items are mandatory in the KV-LIST:
+
+  * &quot;version&quot;    &lt;STRING&gt;
+
+    This is the SPOP version the agent supports. It must follow the format
+    &quot;Major.Minor&quot; and it must be lower or equal than one of major versions
+    announced by HAProxy.
+
+  * &quot;<a href="#max-frame-size">max-frame-size</a>&quot;    &lt;UINT32&gt;
+
+    This is the maximum size allowed for a frame. It must be lower or equal to
+    the value in the HAPROXY-HELLO frame. This value will be used for all
+    subsequent frames.
+
+  * &quot;capabilities&quot;    &lt;STRING&gt;
+
+    This a comma-separated list of capabilities supported by agent. Spaces must
+    be ignored, if any.
+
+At this time, if everything is ok for HAProxy (supported version and valid
+max-frame-size value), the HELLO handshake is successfully completed. Else,
+HAProxy sends a HAPROXY-DISCONNECT frame with the corresponding error.
+
+If &quot;healthcheck&quot; item was set to TRUE in the HAPROXY-HELLO frame, the agent can
+safely close the connection without DISCONNECT frame. In all cases, HAProxy
+will close the connection at the end of the health check.
+</pre></div>
+<a class="anchor" id="3.2.6" name="3.2.6"></a>
+<h3 id="chapter-3.2.6" data-target="3.2.6"><small><a class="small" href="#3.2.6">3.2.6.</a></small> Frame: NOTIFY</h3>
+<div><pre class="text">Information are sent to the agents inside NOTIFY frames. These frames are
+attached to a stream, so STREAM-ID and FRAME-ID must be set. The payload of
+NOTIFY frames is a LIST-OF-MESSAGES and, if supported by agents, it can be
+fragmented.
+
+NOTIFY frames must be acknowledge by agents sending an ACK frame, repeating
+right STREAM-ID and FRAME-ID.
+</pre></div>
+<a class="anchor" id="3.2.7" name="3.2.7"></a>
+<h3 id="chapter-3.2.7" data-target="3.2.7"><small><a class="small" href="#3.2.7">3.2.7.</a></small> Frame: ACK</h3>
+<div><pre class="text">ACK frames must be sent by agents to reply to NOTIFY frames. STREAM-ID and
+FRAME-ID found in a NOTIFY frame must be reuse in the corresponding ACK
+frame. The payload of ACK frames is a LIST-OF-ACTIONS and, if supported by
+HAProxy, it can be fragmented.
+</pre></div>
+<a class="anchor" id="3.2.8" name="3.2.8"></a>
+<h3 id="chapter-3.2.8" data-target="3.2.8"><small><a class="small" href="#3.2.8">3.2.8.</a></small> Frame: HAPROXY-DISCONNECT</h3>
+<div><pre class="text">If an error occurs, at anytime, from the HAProxy side, a HAPROXY-DISCONNECT
+frame is sent with information describing the error. HAProxy will wait an
+AGENT-DISCONNECT frame in reply. All other frames will be ignored. The agent
+must then close the socket.
+
+The payload of this frame is a KV-LIST. It cannot be fragmented. STREAM-ID and
+FRAME-ID are must be set 0.
+
+Following items are mandatory in the KV-LIST:
+
+  * &quot;status-code&quot;    &lt;UINT32&gt;
+
+    This is the code corresponding to the error.
+
+  * &quot;message&quot;    &lt;STRING&gt;
+
+    This is a textual message describing the error.
+
+For more information about known errors, see section &quot;Errors &amp; timeouts&quot;
+</pre></div>
+<a class="anchor" id="3.2.9" name="3.2.9"></a>
+<h3 id="chapter-3.2.9" data-target="3.2.9"><small><a class="small" href="#3.2.9">3.2.9.</a></small> Frame: AGENT-DISCONNECT</h3>
+<div><pre class="text">If an error occurs, at anytime, from the agent size, a AGENT-DISCONNECT frame
+is sent, with information describing the error. such frame is also sent in reply
+to a HAPROXY-DISCONNECT. The agent must close the socket just after sending
+this frame.
+
+The payload of this frame is a KV-LIST. It cannot be fragmented. STREAM-ID and
+FRAME-ID are must be set 0.
+
+Following items are mandatory in the KV-LIST:
+
+  * &quot;status-code&quot;    &lt;UINT32&gt;
+
+    This is the code corresponding to the error.
+
+  * &quot;message&quot;    &lt;STRING&gt;
+
+    This is a textual message describing the error.
+
+For more information about known errors, see section &quot;Errors &amp; timeouts&quot;
+</pre></div>
+<a class="anchor" id="3.3" name="3.3"></a>
+<h2 id="chapter-3.3" data-target="3.3"><small><a class="small" href="#3.3">3.3.</a></small> Events &amp; Messages</h2>
+<div><pre class="text">Information about streams are sent in NOTIFY frames. You can specify which kind
+of information to send by defining &quot;<a href="#spoe-message">spoe-message</a>&quot; sections in your SPOE
+configuration file. for each &quot;<a href="#spoe-message">spoe-message</a>&quot; there will be a message in a NOTIFY
+frame when the right event is triggered.
+
+A NOTIFY frame is sent for an specific event when there is at least one
+&quot;<a href="#spoe-message">spoe-message</a>&quot; attached to this event. All messages for an event will be added
+in the same NOTIFY frame.
+
+Here is the list of supported events:
+
+  * on-client-session         is triggered when a new client session is created.
+                              This event is only available for SPOE filters
+                              declared in a frontend or a listen section.
+
+  * on-frontend-tcp-request   is triggered just before the evaluation of
+                              &quot;tcp-request content&quot; rules on the frontend side.
+                              This event is only available for SPOE filters
+                              declared in a frontend or a listen section.
+
+  * on-backend-tcp-request    is triggered just before the evaluation of
+                              &quot;tcp-request content&quot; rules on the backend side.
+                              This event is skipped for SPOE filters declared
+                              in a listen section.
+
+  * on-frontend-http-request  is triggered just before the evaluation of
+                              &quot;http-request&quot; rules on the frontend side. This
+                              event is only available for SPOE filters declared
+                              in a frontend or a listen section.
+
+  * on-backend-http-request   is triggered just before the evaluation of
+                              &quot;http-request&quot; rules on the backend side. This
+                              event is skipped for SPOE filters declared in a
+                              listen section.
+
+  * on-server-session         is triggered when the session with the server is
+                              established.
+
+  * on-tcp-response           is triggered just before the evaluation of
+                              &quot;tcp-response content&quot; rules.
+
+  * on-http-response          is triggered just before the evaluation of
+                              &quot;http-response&quot; rules.
+
+
+The stream processing will loop on these events, when triggered, waiting the
+agent reply.
+</pre></div>
+<a class="anchor" id="3.4" name="3.4"></a>
+<h2 id="chapter-3.4" data-target="3.4"><small><a class="small" href="#3.4">3.4.</a></small> Actions</h2>
+<div><pre class="text">An agent must acknowledge each NOTIFY frame by sending the corresponding ACK
+frame. Actions can be added in these frames to dynamically take action on the
+processing of a stream.
+
+Here is the list of supported actions:
+
+  * set-var    set the value for an existing variable. 3 arguments must be
+               attached to this action: the variable scope (proc, sess, txn,
+               req or res), the variable name (a string) and its value.
+
+    ACTION-SET-VAR  : &lt;SET-VAR:1 byte&gt;&lt;NB-ARGS:1 byte&gt;&lt;VAR-SCOPE:1 byte&gt;&lt;VAR-NAME&gt;&lt;VAR-VALUE&gt;
+
+    SET-VAR     : &lt;1&gt;
+    NB-ARGS     : &lt;3&gt;
+    VAR-SCOPE   : &lt;PROCESS&gt; | &lt;SESSION&gt; | &lt;TRANSACTION&gt; | &lt;REQUEST&gt; | &lt;RESPONSE&gt;
+    VAR-NAME    : &lt;STRING&gt;
+    VAR-VALUE   : &lt;TYPED-DATA&gt;
+
+    PROCESS     : &lt;0&gt;
+    SESSION     : &lt;1&gt;
+    TRANSACTION : &lt;2&gt;
+    REQUEST     : &lt;3&gt;
+    RESPONSE    : &lt;4&gt;
+
+  * unset-var    unset the value for an existing variable. 2 arguments must be
+                 attached to this action: the variable scope (proc, sess, txn,
+                 req or res) and the variable name (a string).
+
+    ACTION-UNSET-VAR  : &lt;UNSET-VAR:1 byte&gt;&lt;NB-ARGS:1 byte&gt;&lt;VAR-SCOPE:1 byte&gt;&lt;VAR-NAME&gt;
+
+    UNSET-VAR   : &lt;2&gt;
+    NB-ARGS     : &lt;2&gt;
+    VAR-SCOPE   : &lt;PROCESS&gt; | &lt;SESSION&gt; | &lt;TRANSACTION&gt; | &lt;REQUEST&gt; | &lt;RESPONSE&gt;
+    VAR-NAME    : &lt;STRING&gt;
+
+    PROCESS     : &lt;0&gt;
+    SESSION     : &lt;1&gt;
+    TRANSACTION : &lt;2&gt;
+    REQUEST     : &lt;3&gt;
+    RESPONSE    : &lt;4&gt;
+
+
+NOTE: Name of the variables will be automatically prefixed by HAProxy to avoid
+      name clashes with other variables used in HAProxy. Moreover, unknown
+      variable will be silently ignored.
+</pre></div>
+<a class="anchor" id="3.5" name="3.5"></a>
+<h2 id="chapter-3.5" data-target="3.5"><small><a class="small" href="#3.5">3.5.</a></small> Errors &amp; timeouts</h2>
+<div><pre class="text">Here is the list of all known errors:
+
+    STATUS CODE   |  DESCRIPTION
+  ----------------+--------------------------------------------------------
+     0            | normal (no error occurred)
+     1            | I/O error
+     2            | A timeout occurred
+     3            | frame is too big
+     4            | invalid frame received
+     5            | version value not found
+     6            | max-frame-size value not found
+     7            | capabilities value not found
+     8            | unsupported version
+     9            | max-frame-size too big or too small
+     10           | payload fragmentation is not supported
+     11           | invalid interlaced frames
+     12           | frame-id not found (it does not match any referenced frame)
+     13           | resource allocation error
+     99           | an unknown error occurrde
+  ----------------+--------------------------------------------------------
+
+An agent can define its own errors using a not yet assigned status code.
+
+IMPORTANT NOTE: By default, for a specific stream, when an abnormal/unexpected
+                error occurs, the SPOE is disabled for all the transaction. So
+                if you have several events configured, such error on an event
+                will disabled all following. For TCP streams, this will
+                disable the SPOE for the whole session. For HTTP streams, this
+                will disable it for the transaction (request and response).
+                See &#x27;option continue-on-error&#x27; to bypass this limitation.
+
+To avoid a stream to wait undefinetly, you must carefully choose the
+acknowledgement timeout. In most of cases, it will be quiet low. But it depends
+on the responsivness of your service.
+
+You must also choose idle timeout carefully. Because connection with your
+service depends on the backend configuration used by the SPOA, it is important
+to use a lower value for idle timeout than the server timeout. Else the
+connection will be closed by HAProxy. The same is true for hello timeout. You
+should choose a lower value than the connect timeout.
+</pre></div>
+<a class="anchor" id="4" name="4"></a>
+<div class="page-header"><h1 id="chapter-4" data-target="4"><small><a class="small" href="#4">4.</a></small> Logging</h1>
+</div><div><pre class="text">Activity of an SPOE is logged using HAProxy&#x27;s logger. The messages are logged
+in the context of the streams that handle the client and the server
+connections. A message is emitted for each event or group handled by an
+SPOE. Depending on the status code, the log level will be different. In the
+normal case, when no error occurred, the message is logged with the level
+LOG_NOTICE. Otherwise, the message is logged with the level LOG_WARNING.
+
+The messages are logged using the agent&#x27;s logger, if defined, and use the
+following format:
+
+    SPOE: [AGENT] &lt;TYPE:NAME&gt; sid=STREAM-ID st=STATUS-CODE reqT/qT/wT/resT/pT \
+    &lt;idles&gt;/&lt;applets&gt; &lt;nb_sending&gt;/&lt;nb_waiting&gt; &lt;nb_error&gt;/&lt;nb_processed&gt;
+
+      AGENT              is the agent name
+      TYPE               is EVENT of GROUP
+      NAME               is the event or the group name
+      STREAM-ID          is an integer, the unique id of the stream
+      STATUS_CODE        is the processing&#x27;s status code
+      reqT/qT/wT/resT/pT are the following time events:
+
+        * reqT : the encoding time. It includes ACLs processing, if any. For
+                 fragmented frames, it is the sum of all fragments.
+        * qT   : the delay before the request gets out the sending queue. For
+                 fragmented frames, it is the sum of all fragments.
+        * wT   : the delay before the response is received. No fragmentation
+                 supported here.
+        * resT : the delay to process the response. No fragmentation supported
+                 here.
+        * pT   : the delay to process the event or the group. From the stream
+                 point of view, it is the latency added by the SPOE processing.
+                 It is more or less the sum of values above.
+
+      &lt;idle&gt;             is the numbers of idle SPOE applets
+      &lt;applets&gt;          is the numbers of SPOE applets
+      &lt;nb_sending&gt;       is the numbers of streams waiting to send data
+      &lt;nb_waiting&gt;       is the numbers of streams waiting for a ack
+      &lt;nb_error&gt;         is the numbers of processing errors
+      &lt;nb_processed&gt;     is the numbers of events/groups processed
+
+
+For all these time events, -1 means the processing was interrupted before the
+end. So -1 for the queue time means the request was never dequeued. For
+fragmented frames it is harder to know when the interruption happened.
+</pre>
+</div>
+
+						<br>
+						<hr>
+						<div class="text-right">
+							HAProxy 2.4.13 &ndash; SPOE<br>
+							<small>Author : Christopher Faulet, ( Last update: 2020-06-13 )</small>
+						</div>
+					</div>
+					<!-- /.col-lg-12 -->
+				</div>
+				<!-- /.row -->
+			</div>
+			<!-- /#page-wrapper -->
+
+		</div>
+		<!-- /#wrapper -->
+
+        <script src="js/jquery.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+		<script>
+			function filterKeywords(text) {
+				$('.letter').each(function(idx1, letter) {
+					$letter = $(letter)
+					found = false
+					$letter.find('.list-group-item').each(function(idx2, keyword) {
+						$keyword = $(keyword)
+						if ($keyword.text().indexOf(text) != -1) {
+							$keyword.show();
+							found = true
+						}
+						else {
+							$keyword.hide();
+						}
+					})
+					if (found) {
+						$letter.show()
+					}
+					else {
+						$letter.hide()
+					}
+				})
+			}
+		</script>
+		<script>
+			/* EXPERIMENTAL - Previous/Next navigation */
+			var headings = $(":header")
+			var previousTarget = false
+			var nextTarget = false
+			var $previous = $('#previous')
+			var $next = $('#next')
+			function refreshNavigation() {
+				var previous = false
+				var next = false
+				$.each(headings, function(item, value) {
+					var el = $(value)
+
+					// TODO : avoid target recalculation on each refresh
+					var target = el.attr('data-target')
+					if (! target) return true
+
+					var target_el = $('#' + target.replace(/\./, "\\."))
+					if (! target_el.attr('id')) return true
+
+					if (target_el.offset().top < $(window).scrollTop()) {
+						previous = el
+					}
+					if (target_el.offset().top - 1 > $(window).scrollTop()) {
+						next = el
+					}
+					if (next) return false
+				})
+
+				previousTarget = previous ? previous.attr('data-target') : 'top'
+				nextTarget = next ? next.attr('data-target') : 'bottom'
+			}
+
+			$(window).scroll(function () {
+				refreshNavigation()
+			});
+			$(document).ready(function() {
+				refreshNavigation()
+			});
+
+			/* EXPERIMENTAL - Enable keyboard navigation */
+			$(document).keydown(function(e){
+				if (!(e.altKey || e.ctrlKey || e.shiftKey || e.metaKey)) {
+					switch(e.which) {
+						case 37: // left
+						window.location.hash = previousTarget ? previousTarget : 'top'
+						break
+
+						case 39: // right
+						window.location.hash = nextTarget ? nextTarget : 'bottom'
+						break
+
+						default: return // exit this handler for other keys
+					}
+					e.preventDefault()
+				}
+			})
+		</script>
+		<a class="anchor" name="bottom"></a>
+	</body>
+</html>
+

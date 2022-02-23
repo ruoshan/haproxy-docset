@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>HAProxy version 2.5.3 - Lua</title>
+        <link href="css/twitter-bootstrap.min.css" rel="stylesheet" />
+        <link href="css/cerulean-bootstrap.min.css" rel="stylesheet" />
+        <link href="css/page.css?0.4.2" rel="stylesheet" />
+	</head>
+	<body>
+		<nav class="navbar navbar-default" role="navigation">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#menu">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+			</div>
+			<!-- /.navbar-header -->
+
+			<!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="collapse navbar-collapse" id="menu">
+				<ul class="nav navbar-nav">
+						<li class=""><a href="intro.html">Starter Guide</a></li>
+						<li class=""><a href="configuration.html">Configuration Manual</a></li>
+						<li class=""><a href="management.html">Management Guide</a></li>
+						<li class="active"><a href="lua.html">Lua</a></li>
+						<li class=""><a href="SPOE.html">SPOE</a></li>
+				</ul>
+			</div>
+		</nav>
+		<!-- /.navbar-static-side -->
+
+		<div id="wrapper">
+			<div id="page-wrapper">
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="text-center">
+                            <h1><a href="http://www.haproxy.org/" title="HAProxy"><img src="img/HAProxyCommunityEdition_60px.png?0.4.2" /></a></h1>
+							<h2>Lua</h2>
+							<p><strong>version 2.5.3</strong></p>
+							<p>
+								<br>
+								author: Thierry FOURNIER
+							</p>
+						</div>
+
+						<div><pre class="text">HAProxy is a powerful load balancer. It embeds many options and many
+configuration styles in order to give a solution to many load balancing
+problems. However, HAProxy is not universal and some special or specific
+problems do not have solution with the native software.
+
+This text is not a full explanation of the Lua syntax.
+
+This text is not a replacement of the HAProxy Lua API documentation. The API
+documentation can be found at the project root, in the documentation directory.
+The goal of this text is to discover how Lua is implemented in HAProxy and using
+it efficiently.
+
+However, this can be read by Lua beginners. Some examples are detailed.
+</pre></div>
+<a class="anchor" id="summary" name="summary"></a>
+<div class="page-header">
+	<h1 id="chapter-summary" data-target="summary">Summary</h1>
+</div>
+<table class="summary">
+	<tbody>
+		
+			
+				
+				<tr>
+					<td><b><small>1.</small></b></td>
+					<td>
+							<a href="#1"><b>Why a scripting language in HAProxy</b></a>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><br><b><small>2.</small></b></td>
+					<td>
+							<a href="#2"><br><b>Design and technical things</b></a>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>2.1.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#2.1">Prerequisite</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>2.10.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#2.10">HAProxy socket object</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>2.2.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#2.2">more about Lua choice</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>2.3.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#2.3">Non blocking design</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>2.4.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#2.4">Responsive design</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>2.5.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#2.5">Execution time</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>2.6.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#2.6">The stack and the coprocess</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>2.7.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#2.7">The object concept and the HAProxy format</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>2.8.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#2.8">The garbage collector and the memory allocation</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>2.9.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#2.9">The yield concept / longjmp issues</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><br><b><small>3.</small></b></td>
+					<td>
+							<a href="#3"><br><b>How compiling HAProxy with Lua</b></a>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><br><b><small>4.</small></b></td>
+					<td>
+							<a href="#4"><br><b>First steps with Lua</b></a>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>4.1.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#4.1">Start point</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>4.2.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#4.2">Default path and libraries</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>4.3.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#4.3">First useful example</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>4.4.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#4.4">About the converters entry point</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>4.5.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#4.5">The task entry point</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>4.6.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#4.6">Storing Lua variable between function in the same session</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><br><b><small>5.</small></b></td>
+					<td>
+							<a href="#5"><br><b>HTTP actions</b></a>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><br><b><small>6.</small></b></td>
+					<td>
+							<a href="#6"><br><b>Lua is fast, but my service require more execution speed</b></a>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>6.1.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#6.1">The entry point</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>6.2.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#6.2">The build</a>
+							</div>
+					<td>
+				</tr>
+				
+			
+				
+				<tr>
+					<td><small>6.3.</small></td>
+					<td>
+							<div class="tab">
+							<a href="#6.3">Usage</a>
+							</div>
+					<td>
+				</tr>
+				
+	</tbody>
+</table>
+
+
+<a class="anchor" id="1" name="1"></a>
+<div class="page-header"><h1 id="chapter-1" data-target="1"><small><a class="small" href="#1">1.</a></small> Why a scripting language in HAProxy</h1>
+</div><div><pre class="text">HAProxy 1.5 makes at possible to do many things using samples, but some people
+want to more combining results of samples fetches, programming conditions and
+loops which is not possible. Sometimes people implement these functionalities
+in patches which have no meaning outside their network. These people must
+maintain these patches, or worse we must integrate them in the HAProxy
+mainstream.
+
+Their need is to have an embedded programming language in order to no longer
+modify the HAProxy source code, but to write their own control code. Lua is
+encountered very often in the software industry, and in some open source
+projects. It is easy to understand, efficient, light without external
+dependencies, and leaves the resource control to the implementation. Its design
+is close to the HAProxy philosophy which uses components for what they do
+perfectly.
+
+The HAProxy control block allows one to take a decision based on the comparison
+between samples and patterns. The samples are extracted using fetch functions
+easily extensible, and are used by actions which are also extensible. It seems
+natural to allow Lua to give samples, modify them, and to be an action target.
+So, Lua uses the same entities as the configuration language. This is the most
+natural and reliable way for the Lua integration. So, the Lua engine allows one
+to add new sample fetch functions, new converter functions and new actions.
+These new entities can access the existing samples fetches and converters
+allowing to extend them without rewriting them.
+
+The writing of the first Lua functions shows that implementing complex concepts
+like protocol analysers is easy and can be extended to full services. It appears
+that these services are not easy to implement with the HAProxy configuration
+model which is based on four steps: fetch, convert, compare and action. HAProxy
+is extended with a notion of services which are a formalisation of the existing
+services like stats, cli and peers. The service is an autonomous entity with a
+behaviour pattern close to that of an external client or server. The Lua engine
+inherits from this new service and offers new possibilities for writing
+services.
+
+This scripting language is useful for testing new features as proof of concept.
+Later, if there is general interest, the proof of concept could be integrated
+with C language in the HAProxy core.
+
+The HAProxy Lua integration also provides a simple way for distributing Lua
+packages. The final user needs only to install the Lua file, load it in HAProxy
+and follow the attached documentation.
+</pre></div>
+<a class="anchor" id="2" name="2"></a>
+<div class="page-header"><h1 id="chapter-2" data-target="2"><small><a class="small" href="#2">2.</a></small> Design and technical things</h1>
+</div><div><pre class="text">Lua is integrated into the HAProxy event driven core. We want to preserve the
+fast processing of HAProxy. To ensure this, we implement some technical concepts
+between HAProxy and the Lua library.
+
+The following paragraph also describes the interactions between Lua and HAProxy
+from a technical point of view.
+</pre></div>
+<a class="anchor" id="2.1" name="2.1"></a>
+<h2 id="chapter-2.1" data-target="2.1"><small><a class="small" href="#2.1">2.1.</a></small> Prerequisite</h2>
+<div><pre class="text">Reading the following documentation links is required to understand the
+current paragraph:
+
+   HAProxy doc: http://cbonte.github.io/haproxy-dconv/
+   Lua API:     http://www.lua.org/manual/5.3/
+   HAProxy API: http://www.arpalert.org/src/haproxy-lua-api/1.9dev/index.html
+   Lua guide:   http://www.lua.org/pil/
+</pre></div>
+<a class="anchor" id="2.2" name="2.2"></a>
+<h2 id="chapter-2.2" data-target="2.2"><small><a class="small" href="#2.2">2.2.</a></small> more about Lua choice</h2>
+<div><pre class="text">Lua language is very simple to extend. It is easy to add new functions written
+in C in the core language. It is not required to embed very intrusive libraries,
+and we do not change compilation processes.
+
+The amount of memory consumed can be controlled, and the issues due to lack of
+memory are perfectly caught. The maximum amount of memory allowed for the Lua
+processes is configurable. If some memory is missing, the current Lua action
+fails, and the HAProxy processing flow continues.
+
+Lua provides a way for implementing event driven design. When the Lua code
+wants to do a blocking action, the action is started, it executes non blocking
+operations, and returns control to the HAProxy scheduler when it needs to wait
+for some external event.
+
+The Lua process can be interrupted after a number of instructions executed. The
+Lua execution will resume later. This is a useful way for controlling the
+execution time. This system also keeps HAProxy responsive. When the Lua
+execution is interrupted, HAProxy accepts some connections or transfers pending
+data. The Lua execution does not block the main HAProxy processing, except in
+some cases which we will see later.
+</pre></div>
+<a class="anchor" id="2" name="2"></a>
+<div class="page-header"><h1 id="chapter-2" data-target="2"><small><a class="small" href="#2">2.</a></small> 3 Lua function integration</h1>
+</div><div><pre class="text">The Lua actions, sample fetches, converters and services are integrated in
+HAProxy with &quot;register_*&quot; functions. The register system is a choice for
+providing HAProxy Lua packages easily. The register system adds new sample
+fetches, converters, actions or services usable in the HAProxy configuration
+file.
+
+The register system is defined in the &quot;core&quot; functions collection. This
+collection is provided by HAProxy and is always available. Below, the list of
+these functions:
+
+ - core.register_action()
+ - core.register_converters()
+ - core.register_fetches()
+ - core.register_init()
+ - core.register_service()
+ - core.register_task()
+
+These functions are the execution entry points.
+
+HTTP action must be used for manipulating HTTP request headers. This action
+can not manipulates HTTP content. It is dangerous to use the channel
+manipulation object with an HTTP request in an HTTP action. The channel
+manipulation can transform a valid request in an invalid request. In this case,
+the action will never resume and the processing will be frozen. HAProxy
+discards the request after the reception timeout.
+</pre></div>
+<a class="anchor" id="2.3" name="2.3"></a>
+<h2 id="chapter-2.3" data-target="2.3"><small><a class="small" href="#2.3">2.3.</a></small> Non blocking design</h2>
+<div><pre class="text">HAProxy is an event driven software, so blocking system calls are absolutely
+forbidden. However, the Lua allows to do blocking actions. When an action
+blocks, HAProxy is waiting and do nothing, so the basic functionalities like
+accepting connections or forwarding data are blocked while the end of the system
+call. In this case HAProxy will be less responsive.
+
+This is very insidious because when the developer tries to execute its Lua code
+with only one stream, HAProxy seems to run fine. When the code is used with
+production stream, HAProxy encounters some slow processing, and it cannot
+hold the load.
+
+However, during the initialisation state, you can obviously using blocking
+functions. There are typically used for loading files.
+
+The list of prohibited standard Lua functions during the runtime contains all
+that do filesystem access:
+
+ - os.remove()
+ - os.rename()
+ - os.tmpname()
+ - package.*()
+ - io.*()
+ - file.*()
+
+Some other functions are prohibited:
+
+ - os.execute(), waits for the end of the required execution blocking HAProxy.
+
+ - os.exit(), is not really dangerous for the process, but it&#x27;s not the good way
+              for exiting the HAProxy process.
+
+ - print(), writes data on stdout. In some cases these writes are blocking, the
+            best practice is reserving this call for debugging. We must prefer
+            to use core.log() or TXN.log() for sending messages.
+
+Some HAProxy functions have a blocking behaviour pattern in the Lua code, but
+there are compatible with the non blocking design. These functions are:
+
+ - All the socket class
+ - core.sleep()
+</pre></div>
+<a class="anchor" id="2.4" name="2.4"></a>
+<h2 id="chapter-2.4" data-target="2.4"><small><a class="small" href="#2.4">2.4.</a></small> Responsive design</h2>
+<div><pre class="text">HAProxy must process connections accept, forwarding data and processing timeouts
+as soon as possible. The first thing is to believe that a Lua script with a long
+execution time should impact the expected responsive behaviour.
+
+It is not the case, the Lua script execution are regularly interrupted, and
+HAProxy can process other things. These interruptions are exprimed in number of
+Lua instructions. The number of interruptions between two interrupts is
+configured with the following &quot;tune&quot; option:
+
+   tune.lua.forced-yield &lt;nb&gt;
+
+The default value is 10 000. For determining it, I ran benchmark on my laptop.
+I executed a Lua loop between 10 seconds with different values for the
+&quot;tune.lua.forced-yield&quot; option, and I noted the results:
+
+    configured    | Number of
+    instructions  | loops executed
+    between two   | in millions
+    forced yields |
+   ---------------+---------------
+    10            | 160
+    500           | 670
+    1000          | 680
+    5000          | 700
+    7000          | 700
+    8000          | 700
+    9000          | 710 &lt;- ceil
+    10000         | 710
+    100000        | 710
+    1000000       | 710
+
+The result showed that from 9000 instructions between two interrupt, we reached
+a ceil, so the default parameter is 10 000.
+
+When HAProxy interrupts the Lua processing, we have two states possible:
+
+ - Lua is resumable, and it returns control to the HAProxy scheduler,
+ - Lua is not resumable, and we just check the execution timeout.
+
+The second case occurs if it is required by the HAProxy core. This state is
+forced if the Lua is processed in a non resumable HAProxy part, like sample
+fetches or converters.
+
+It occurs also if the Lua is non resumable. For example, if some code is
+executed through the Lua pcall() function, the execution is not resumable. This
+is explained later.
+
+So, the Lua code must be fast and simple when is executed as sample fetches and
+converters, it could be slow and complex when is executed as actions and
+services.
+</pre></div>
+<a class="anchor" id="2.5" name="2.5"></a>
+<h2 id="chapter-2.5" data-target="2.5"><small><a class="small" href="#2.5">2.5.</a></small> Execution time</h2>
+<div><pre class="text">The Lua execution time is measured and limited. Each group of functions has its
+own timeout configured. The time measured is the real Lua execution time, and
+not the difference between the end time and the start time. The groups are:
+
+ - main code and init are not submitted to the timeout,
+ - fetches, converters and action have a default timeout of 4s,
+ - task, by default does not have timeout,
+ - service have a default timeout of 4s.
+
+The corresponding tune options are:
+
+ - tune.lua.session-timeout (fetches, converters and action)
+ - tune.lua.task-timeout    (task)
+ - tune.lua.service-timeout (services)
+
+The task does not have a timeout because it runs in background along the
+HAProxy process life.
+
+For example, if an Lua script is executed during 1.1s and the script executes a
+sleep of 1 second, the effective measured running time is 0.1s.
+
+This timeout is useful for preventing infinite loops. During the runtime, it
+should be never triggered.
+</pre></div>
+<a class="anchor" id="2.6" name="2.6"></a>
+<h2 id="chapter-2.6" data-target="2.6"><small><a class="small" href="#2.6">2.6.</a></small> The stack and the coprocess</h2>
+<div><pre class="text">The Lua execution is organized around a stack. Each Lua action, even out of the
+effective execution, affects the stack. HAProxy integration uses one main stack,
+which is common for all the process, and a secondary one used as coprocess.
+After the initialization, the main stack is no longer used by HAProxy, except
+for global storage. The second type of stack is used by all the Lua functions
+called from different Lua actions declared in HAProxy. The main stack permits
+to store coroutines pointers, and some global variables.
+
+Do you want to see an example of how seems Lua C development around a stack ?
+Some examples follows. This first one, is a simple addition:
+
+   lua_pushnumber(L, 1)
+   lua_pushnumber(L, 2)
+   lua_arith(L, LUA_OPADD)
+
+It&#x27;s easy, we push 1 on the stack, after, we push 2, and finally, we perform an
+addition. The two top entries of the stack are added, popped, and the result is
+pushed. It is a classic way with a stack.
+
+Now an example for constructing array and objects. It&#x27;s a little bit more
+complicated. The difficult consist to keep in mind the state of the stack while
+we write the code. The goal is to create the entity described below. Note that
+the notation &quot;*1&quot; is a metatable reference. The metatable will be explained
+later.
+
+   name*1 = {
+      [0] = &lt;userdata&gt;,
+   }
+
+   *1 = {
+      &quot;__index&quot; = {
+         &quot;method1&quot; = &lt;function&gt;,
+         &quot;method2&quot; = &lt;function&gt;
+      }
+      &quot;__gc&quot; = &lt;function&gt;
+   }
+
+Let&#x27;s go:
+
+   lua_newtable()               // The &quot;name&quot; table
+   lua_newtable()               // The metatable *1
+   lua_pushstring(&quot;__index&quot;)
+   lua_newtable()               // The &quot;__index&quot; table
+   lua_pushstring(&quot;method1&quot;)
+   lua_pushfunction(function)
+   lua_settable(-3)             // -3 is an index in the stack. insert method1
+   lua_pushstring(&quot;method2&quot;)
+   lua_pushfunction(function)
+   lua_settable(-3)             // insert method2
+   lua_settable(-3)             // insert &quot;__index&quot;
+   lua_pushstring(&quot;__gc&quot;)
+   lua_pushfunction(function)
+   lua_settable()               // insert &quot;__gc&quot;
+   lua_setmetatable(-1)         // attach metatable to &quot;name&quot;
+   lua_pushnumber(0)
+   lua_pushuserdata(userdata)
+   lua_settable(-3)
+   lua_setglobal(&quot;name&quot;)
+
+So, coding for Lua in C, is not complex, but it needs some mental gymnastic.
+</pre></div>
+<a class="anchor" id="2.7" name="2.7"></a>
+<h2 id="chapter-2.7" data-target="2.7"><small><a class="small" href="#2.7">2.7.</a></small> The object concept and the HAProxy format</h2>
+<div><pre class="text">The object seems to be not a native concept. An Lua object is a table. We can
+note that the table notation accept three forms:
+
+   1. mytable[&quot;entry&quot;](mytable, &quot;param&quot;)
+   2. mytable.entry(mytable, &quot;param&quot;)
+   3. mytable:entry(&quot;param&quot;)
+
+These three notation have the same behaviour pattern: a function is executed
+with the table itself as first parameter and string &quot;param&quot; as second parameter
+The notation with [] is commonly used for storing data in a hash table, and the
+dotted notation is used for objects. The notation with &quot;:&quot; indicates that the
+first parameter is the element at the left of the symbol &quot;:&quot;.
+
+So, an object is a table and each entry of the table is a variable. A variable
+can be a function. These are the first concepts of the object notation in the
+Lua, but it is not the end.
+
+With the objects, we usually expect classes and inheritance. This is the role of
+the metable. A metable is a table with predefined entries. These entries modify
+the default behaviour of the table. The simplest example is the &quot;__index&quot; entry.
+If this entry exists, it is called when a value is requested in the table. The
+behaviour is the following:
+
+   1 - looks in the table if the entry exists, and if it the case, return it
+
+   2 - looks if a metatable exists, and if the &quot;__index&quot; entry exists
+
+   3 - if &quot;__index&quot; is a function, execute it with the key as parameter, and
+       returns the result of the function.
+
+   4 - if &quot;__index&quot; is a table, looks if the requested entry exists, and if
+       exists, return it.
+
+   5 - if not exists, return to step 2
+
+The behaviour of the point 5 represents the inheritance.
+
+In HAProxy all the provided objects are tables, the entry &quot;[0]&quot; contains private
+data, there are often userdata or lightuserdata. The metatable is registered in
+the global part of the main Lua stack, and it is called with the case sensitive
+class name. A great part of these class must not be used directly because it
+requires an initialisation using the HAProxy internal structs.
+
+The HAProxy objects use unified conventions. An Lua object is always a table.
+In most cases, an HAProxy Lua object needs some private data. These are always
+</pre><a class="anchor" name="set"></a><a class="anchor" name="2-set"></a><a class="anchor" name="2.7-set"></a><a class="anchor" name="set (Design and technical things)"></a><a class="anchor" name="set (The object concept and the HAProxy format)"></a><a class="anchor" name="set in"></a><a class="anchor" name="2-set in"></a><a class="anchor" name="2.7-set in"></a><a class="anchor" name="set in (Design and technical things)"></a><a class="anchor" name="set in (The object concept and the HAProxy format)"></a><a class="anchor" name="set in the"></a><a class="anchor" name="2-set in the"></a><a class="anchor" name="2.7-set in the"></a><a class="anchor" name="set in the (Design and technical things)"></a><a class="anchor" name="set in the (The object concept and the HAProxy format)"></a><a class="anchor" name="set in the index"></a><a class="anchor" name="2-set in the index"></a><a class="anchor" name="2.7-set in the index"></a><a class="anchor" name="set in the index (Design and technical things)"></a><a class="anchor" name="set in the index (The object concept and the HAProxy format)"></a><div class="keyword"><b><a class="anchor" name="set in the index"></a><a href="#2.7-set%20in%20the%20index">set in the index</a></b> <span style="color: #008">[0]</span> of the array. The metatable entry &quot;__tostring&quot; returns the</div><pre class="text">object name.
+
+The Lua developer can add entries to the HAProxy object. They just work carefully
+and prevent to modify the index [0].
+
+Common HAProxy objects are:
+
+ - TXN        : manipulates the transaction between the client and the server
+ - Channel    : manipulates proxified data between the client and the server
+ - HTTP       : manipulates HTTP between the client and the server
+ - Map        : manipulates HAProxy maps.
+ - Fetches    : access to all HAProxy sample fetches
+ - Converters : access to all HAProxy sample converters
+ - AppletTCP  : process client request like a TCP server
+ - AppletHTTP : process client request like an HTTP server
+ - Socket     : establish tcp connection to a server (ipv4/ipv6/socket/ssl/...)
+</pre></div>
+<a class="anchor" id="2.8" name="2.8"></a>
+<h2 id="chapter-2.8" data-target="2.8"><small><a class="small" href="#2.8">2.8.</a></small> The garbage collector and the memory allocation</h2>
+<div><pre class="text">Lua doesn&#x27;t really have a global memory limit, but HAProxy implements it. This
+permits to control the amount of memory dedicated to the Lua processes. It is
+specially useful with embedded environments.
+
+When the memory limit is reached, HAProxy refuses to give more memory to the Lua
+scripts. The current Lua execution is terminated with an error and HAProxy
+continues its processing.
+
+The max amount of memory is configured with the option:
+
+   tune.lua.maxmem
+
+As many other script languages, Lua uses a garbage collector for reusing its
+memory. The Lua developer can work without memory preoccupation. Usually, the
+garbage collector is controlled by the Lua core, but sometimes it will be useful
+to run when the user/developer requires. So the garbage collector can be called
+from C part or Lua part.
+
+Sometimes, objects using lightuserdata or userdata requires to free some memory
+block or close filedescriptor not controlled by the Lua. A dedicated garbage
+collection function is provided through the metatable. It is referenced with the
+special entry &quot;__gc&quot;.
+
+Generally, in HAProxy, the garbage collector does this job without any
+intervention. However some objects use a great amount of memory, and we want to
+release as quickly as possible. The problem is that only the GC knows if the
+object is in use or not. The reason is simple variable containing objects can be
+shared between coroutines and the main thread, so an object can be used
+everywhere in HAProxy.
+
+The only one example is the HAProxy sockets. These are explained later, just for
+understanding the GC issues, a quick overview of the socket follows. The HAProxy
+socket uses an internal session and stream, the session uses resources like
+memory and file descriptor and in some cases keeps a socket open while it is no
+longer used by Lua.
+
+If the HAProxy socket is used, we forcing a garbage collector cycle after the
+end of each function using HAProxy socket. The reason is simple: if the socket
+is no longer used, we want to close the connection quickly.
+
+A special flag is used in HAProxy indicating that a HAProxy socket is created.
+If this flag is set, a full GC cycle is started after each Lua action. This is
+not free, we loose about 10% of performances, but it is the only way for closing
+sockets quickly.
+</pre></div>
+<a class="anchor" id="2.9" name="2.9"></a>
+<h2 id="chapter-2.9" data-target="2.9"><small><a class="small" href="#2.9">2.9.</a></small> The yield concept / longjmp issues</h2>
+<div><pre class="text">The &quot;yield&quot; is an action which does some Lua processing in pause and give back
+the hand to the HAProxy core. This action is do when the Lua needs to wait about
+data or other things. The most basically example is the sleep() function. In an
+event driven software the code must not process blocking systems call, so the
+sleep blocks the software between a lot of time. In HAProxy, an Lua sleep does a
+yield, and ask to the scheduler to be woken up in a required sleep time.
+Meanwhile, the HAProxy scheduler does other things, like accepting new
+connection or forwarding data.
+
+A yield is also executed regularly, after a lot of Lua instructions processed.
+This yield permits to control the effective execution time, and also give back
+the hand to the HAProxy core. When HAProxy finishes to process the pending jobs,
+the Lua execution continues.
+
+This special &quot;yield&quot; uses the Lua &quot;debug&quot; functions. Lua provides a debug method
+called &quot;lua_sethook()&quot; which permits to interrupt the execution after some
+configured condition and call a function. This condition used in HAProxy is
+a number of instructions processed and when a function returns. The function
+called controls the effective execution time, and if it is possible to send a
+&quot;yield&quot;.
+
+The yield system is based on a couple setjmp/longjmp. In brief, the setjmp()
+stores a stack state, and the longjmp restores the stack in its state which had
+before the last Lua execution.
+
+Lua can immediately stop its execution if an error occurs. This system uses also
+the longjmp system. In HAProxy, we try to use this system only for unrecoverable
+errors. Maybe some trivial errors target an exception, but we try to remove it.
+
+It seems that Lua uses the longjmp system for having a behaviour like the java
+</pre><a class="anchor" name="try"></a><a class="anchor" name="2-try"></a><a class="anchor" name="2.9-try"></a><a class="anchor" name="try (Design and technical things)"></a><a class="anchor" name="try (The yield concept / longjmp issues)"></a><div class="keyword"><b><a class="anchor" name="try"></a><a href="#2.9-try">try</a></b> / catch. We can use the function pcall() to execute some code. The function</div><pre class="text">pcall() run a setjmp(). So, if any error occurs while the Lua code execution,
+the flow immediately returns from the pcall() with an error.
+
+The big issue of this behaviour is that we cannot do a yield. So if some Lua code
+executes a library using pcall for catching errors, HAProxy must be wait for the
+end of execution without processing any accept or any stream. The cause is the
+yield must be jump to the root of execution. The intermediate setjmp() avoids
+this behaviour.
+
+
+   HAProxy start Lua execution
+     + Lua puts a setjmp()
+        + Lua executes code
+        + Some code is executed in a pcall()
+           + pcall() puts a setjmp()
+              + Lua executes code
+                 + A yield is require for a sleep function
+                   it cannot be jumps to the Lua root execution.
+
+
+Another issue with the processing of strong errors is the manipulation of the
+Lua stack outside of an Lua processing. If one of the functions called occurs a
+strong error, the default behaviour is an abort(). It is not acceptable when
+HAProxy is in runtime mode. The Lua documentation propose to use another
+setjmp/longjmp to avoid the abort(). The goal is to put a setjmp between
+manipulating the Lua stack and using an alternative &quot;panic&quot; function which jumps
+to the setjmp() in error case.
+
+All of these behaviours are very dangerous for the stability, and the internal
+HAProxy code must be modified with many precautions.
+
+For preserving a good behaviour of HAProxy, the yield is mandatory.
+Unfortunately, some HAProxy parts are not adapted for resuming an execution
+after a yield. These parts are the sample fetches and the sample converters. So,
+the Lua code written in these parts of HAProxy must be quickly executed, and can
+not do actions which require yield like TCP connection or simple sleep.
+</pre></div>
+<a class="anchor" id="2.10" name="2.10"></a>
+<h2 id="chapter-2.10" data-target="2.10"><small><a class="small" href="#2.10">2.10.</a></small> HAProxy socket object</h2>
+<div><pre class="text">The HAProxy design is optimized for the data transfers between a client and a
+server, and processing the many errors which can occurs during these exchanges.
+HAProxy is not designed for having a third connection established to a third
+party server.
+
+The solution consist to put the main stream in pause waiting for the end of the
+exchanges with the third connection. This is completed by a signal between
+internal tasks. The following graph shows the HAProxy Lua socket:
+
+
+                      +--------------------+
+                      | Lua processing     |
+ ------------------\  | creates socket     | ------------------\
+  incoming request  &gt; | and puts the       |  Outgoing request  &gt;
+ ------------------/  | current processing | ------------------/
+                      | in pause waiting   |
+                      | for TCP applet     |
+                      +-----------------+--+
+                        ^               |
+                        |               |
+                        | signal        | read / write
+                        |               | data
+                        |               |
+          +-------------+---------+     v
+          | HAProxy internal      +----------------+
+          | applet send signals   |                |
+          | when data is received |                | -------------------\
+          | or some room is       |  Attached I/O  |  Client TCP stream  &gt;
+          | available             |  Buffers       | -------------------/
+          +--------------------+--+                |
+                               |                   |
+                               +-------------------+
+
+
+A more detailed graph is available in the &quot;doc/internals&quot; directory.
+
+The HAProxy Lua socket uses a full HAProxy session / stream for establishing the
+connection. This mechanism provides all the facilities and HAProxy features,
+like the SSL stack, many socket type, and support for namespaces.
+Technically it supports the proxy protocol, but there are no way to enable it.
+</pre></div>
+<a class="anchor" id="3" name="3"></a>
+<div class="page-header"><h1 id="chapter-3" data-target="3"><small><a class="small" href="#3">3.</a></small> How compiling HAProxy with Lua</h1>
+</div><div><pre class="text">HAProxy 1.6 requires Lua 5.3. Lua 5.3 offers some features which make easy the
+integration. Lua 5.3 is young, and some distros do not distribute it. Luckily,
+Lua is a great product because it does not require exotic dependencies, and its
+build process is really easy.
+
+The compilation process for linux is easy:
+
+ - download the source tarball
+   wget http://www.lua.org/ftp/lua-5.3.1.tar.gz
+
+ - untar it
+   tar xf lua-5.3.1.tar.gz
+
+ - enter the directory
+   cd lua-5.3.1
+
+ - build the library for linux
+   make linux
+
+ - install it:
+   sudo make INSTALL_TOP=/opt/lua-5.3.1 install
+
+HAProxy builds with your favourite options, plus the following options for
+embedding the Lua script language:
+
+ - download the source tarball
+   wget http://www.haproxy.org/download/1.6/src/haproxy-1.6.2.tar.gz
+
+ - untar it
+   tar xf haproxy-1.6.2.tar.gz
+
+ - enter the directory
+   cd haproxy-1.6.2
+
+ - build HAProxy:
+   make TARGET=linux-glibc \
+        USE_LUA=1 \
+        LUA_LIB=/opt/lua-5.3.1/lib \
+        LUA_INC=/opt/lua-5.3.1/include
+
+ - install it:
+   sudo make PREFIX=/opt/haproxy-1.6.2 install
+</pre></div>
+<a class="anchor" id="4" name="4"></a>
+<div class="page-header"><h1 id="chapter-4" data-target="4"><small><a class="small" href="#4">4.</a></small> First steps with Lua</h1>
+</div><div><pre class="text">Now, it&#x27;s time to use Lua in HAProxy.
+</pre></div>
+<a class="anchor" id="4.1" name="4.1"></a>
+<h2 id="chapter-4.1" data-target="4.1"><small><a class="small" href="#4.1">4.1.</a></small> Start point</h2>
+<div><pre class="text">The HAProxy global directive &quot;lua-load &lt;file&gt;&quot; allows to load an Lua file. This
+is the entry point. This load become during the configuration parsing, and the
+Lua file is immediately executed.
+
+All the register_*() functions must be called at this time because they are used
+just after the processing of the global section, in the frontend/backend/listen
+sections.
+
+The most simple &quot;Hello world !&quot; is the following line a loaded Lua file:
+
+   core.Alert(&quot;Hello World !&quot;);
+
+It displays a log during the HAProxy startup:
+
+   [alert] 285/083533 (14465) : Hello World !
+</pre></div>
+<a class="anchor" id="4.2" name="4.2"></a>
+<h2 id="chapter-4.2" data-target="4.2"><small><a class="small" href="#4.2">4.2.</a></small> Default path and libraries</h2>
+<div><pre class="text">Lua can embed some libraries. These libraries can be included from different
+paths. It seems that Lua doesn&#x27;t like subdirectories. In the following example,
+I try to load a compiled library, so the first line is Lua code, the second line
+is an &#x27;strace&#x27; extract proving that the library was opened. The next lines are
+the associated error.
+
+   require(&quot;luac/concat&quot;)
+
+   open(&quot;./luac/concat.so&quot;, O_RDONLY|O_CLOEXEC) = 4
+
+        [ALERT]    (22806) : parsing [commonstats.conf:15] : lua runtime
+        error: error loading module &#x27;luac/concat&#x27; from file &#x27;./luac/concat.so&#x27;:
+                ./luac/concat.so: undefined symbol: luaopen_luac/concat
+
+Lua tries to load the C symbol &#x27;luaopen_luac/concat&#x27;. When Lua tries to open a
+library, it tries to execute the function associated to the symbol
+&quot;luaopen_&lt;libname&gt;&quot;.
+
+The variable &quot;&lt;libname&gt;&quot; is defined using the content of the variable
+&quot;package.cpath&quot; and/or &quot;package.path&quot;. The default definition of the
+&quot;package.cpath&quot; (on my computer is ) variable is:
+
+   /usr/local/lib/lua/5.3/?.so;/usr/local/lib/lua/5.3/loadall.so;./?.so
+
+The &quot;&lt;libname&gt;&quot; is the content which replaces the symbol &quot;&lt;?&gt;&quot;. In the previous
+example, its &quot;luac/concat&quot;, and obviously the Lua core try to load the function
+associated with the symbol &quot;luaopen_luac/concat&quot;.
+
+My conclusion is that Lua doesn&#x27;t support subdirectories. So, for loading
+libraries in subdirectory, it must fill the variable with the name of this
+subdirectory. The extension .so must disappear, otherwise Lua try to execute the
+function associated with the symbol &quot;luaopen_concat.so&quot;. The following syntax is
+correct:
+
+   package.cpath = package.cpath .. &quot;;./luac/?.so&quot;
+        require(&quot;concat&quot;)
+</pre></div>
+<a class="anchor" id="4.3" name="4.3"></a>
+<h2 id="chapter-4.3" data-target="4.3"><small><a class="small" href="#4.3">4.3.</a></small> First useful example</h2>
+<div><pre class="text">   core.register_fetches(&quot;my-hash&quot;, function(txn, salt)
+      return txn.sc:sdbm(salt .. txn.sf:req_fhdr(&quot;host&quot;) .. txn.sf:path() .. txn.sf:src(), 1)
+   end)
+
+You will see that these 3 lines can generate a lot of explanations :)
+
+Core.register_fetches() is executed during the processing of the global section
+by the HAProxy configuration parser. A new sample fetch is declared with name
+&quot;my-hash&quot;, this name is always prefixed by &quot;lua.&quot;. So this new declared
+sample fetch will be used calling &quot;lua.my-hash&quot; in the HAProxy configuration
+file.
+
+The second parameter is an inline declared anonymous function. Note the closed
+parenthesis after the keyword &quot;end&quot; which ends the function. The first parameter
+of this anonymous function is &quot;<a href="#txn">txn</a>&quot;. It is an object of class TXN. It provides
+access functions. The second parameter is an arbitrary value provided by the
+HAProxy configuration file. This parameter is optional, the developer must
+check if it is present.
+
+The anonymous function registration is executed when the HAProxy backend or
+frontend configuration references the sample fetch &quot;lua.my-hash&quot;.
+
+This example can be written with another style, like below:
+
+   function my_hash(txn, salt)
+      return txn.sc:sdbm(salt .. txn.sf:req_fhdr(&quot;host&quot;) .. txn.sf:path() .. txn.sf:src(), 1)
+   end
+
+   core.register_fetches(&quot;my-hash&quot;, my_hash)
+
+This second form is clearer, but the first one is compact.
+
+The operator &quot;..&quot; is a string concatenation. If one of the two operands is not a
+string, an error occurs and the execution is immediately stopped. This is
+important to keep in mind for the following things.
+
+Now I write the example on more than one line. Its an easiest way for commenting
+the code:
+
+    1. function my_hash(txn, salt)
+    2.    local str = &quot;&quot;
+    3.    str = str .. salt
+    4.    str = str .. txn.sf:req_fhdr(&quot;host&quot;)
+    5.    str = str .. txn.sf:path()
+    6.    str = str .. txn.sf:src()
+    7.    local result = txn.sc:sdbm(str, 1)
+    8.    return result
+    9. end
+   10.
+   11. core.register_fetches(&quot;my-hash&quot;, my_hash)
+</pre><a class="anchor" name="local"></a><a class="anchor" name="4-local"></a><a class="anchor" name="4.3-local"></a><a class="anchor" name="local (First steps with Lua)"></a><a class="anchor" name="local (First useful example)"></a><div class="keyword"><b><a class="anchor" name="local"></a><a href="#4.3-local">local</a></b></div><pre class="text">~~~~~
+
+The first keyword is &quot;<a href="#local">local</a>&quot;. This is a really important keyword. You must
+understand that the function &quot;my_hash&quot; will be called for each HAProxy request
+using the declared sample fetch. So, this function can be executed many times in
+parallel.
+
+By default, Lua uses global variables. So in this example, if the variable &quot;str&quot;
+is declared without the keyword &quot;<a href="#local">local</a>&quot;, it will be shared by all the parallel
+executions of the function and obviously, the content of the requests will be
+shared.
+
+This warning is very important. I tried to write useful Lua code like a rewrite
+of the statistics page, and it is very hard thing to declare each variable as
+&quot;<a href="#local">local</a>&quot;.
+
+I guess that this behaviour will be the cause of many troubles on the mailing
+list.
+
+str = str ..
+~~~~~~~~~~~~
+
+Now a parenthesis about the form &quot;str = str ..&quot;. This form allows to do string
+concatenations. Remember that Lua uses a garbage collector, so what happens when
+we do &quot;str = str .. &#x27;another string&#x27;&quot; ?
+
+   str = str .. &quot;another string&quot;
+   ^     ^   ^  ^
+   1     2   3  4
+
+Lua executes first the concatenation operator (3), it allocates memory for the
+resulting string and fill this memory with the concatenation of the operands 2
+and 4. Next, it frees the variable 1, now the old content of 1 can be garbage
+collected. And finally, the new content of 1 is the concatenation.
+
+what the matter ? when we do this operation many times, we consume a lot of
+memory, and the string data is duplicated and move many times. So, this practice
+is expensive in execution time and memory consumption.
+
+There are easy ways to prevent this behaviour. I guess that a C binding for
+concatenation with chunks will be available ASAP (it is already written). I do
+some benchmarks. I compare the execution time of 1 000 times, 1 000
+concatenation of 10 bytes written in pure Lua and with a C library. The result is
+10 times faster in C (1s in Lua, and 0.1s in C).
+</pre><a class="anchor" name="txn"></a><a class="anchor" name="4-txn"></a><a class="anchor" name="4.3-txn"></a><a class="anchor" name="txn (First steps with Lua)"></a><a class="anchor" name="txn (First useful example)"></a><div class="keyword"><b><a class="anchor" name="txn"></a><a href="#4.3-txn">txn</a></b></div><pre class="text">~~~
+
+txn is an HAProxy object of class TXN. The documentation is available in the
+HAProxy Lua API reference. This class allow the access to the native HAProxy
+sample fetches and converters. The object txn contains 2 members dedicated to
+the sample fetches and 2 members dedicated to the converters.
+
+The sample fetches members are &quot;f&quot; (as sample-Fetch) and &quot;sf&quot; (as String
+sample-Fetch). These two members contain exactly the same functions. All the
+HAProxy native sample fetches are available, obviously, the Lua registered sample
+fetches are not available. Unfortunately, HAProxy sample fetches names are not
+compatible with the Lua function names, and they are renamed. The rename
+convention is simple, we replace all the &#x27;.&#x27;, &#x27;+&#x27; and &#x27;-&#x27; by &#x27;_&#x27;. The &#x27;.&#x27; is the
+object member separator, and the &quot;-&quot; and &quot;+&quot; is math operator.
+
+Now, that I&#x27;m writing this article, I know the Lua better than I wrote the
+sample-fetches wrapper. The original HAProxy sample-fetches name should be used
+using alternative manner to call an object member, so the sample-fetch
+&quot;req.fhdr&quot; (actually renamed req_fhdr&quot;) should be used like this:
+
+   txn.f[&quot;req.fhdr&quot;](txn.f, ...)
+
+However, I think that this form is not elegant.
+
+The &quot;s&quot; collection return a data with a type near to the original returned type.
+A string returns an Lua string, an integer returns an Lua integer and an IP
+address returns an Lua string. Sometime the data is not or not yet available, in
+this case it returns the Lua nil value.
+
+The &quot;sf&quot; collection guarantees that a string will be always returned. If the data
+is not available, an empty string is returned. The main usage of these collection
+is to concatenate the returned sample-fetches without testing each function.
+
+The parameters of the sample-fetches are according with the HAProxy
+documentation.
+
+The converters run exactly with the same manner as the sample fetches. The
+only one difference is that the first parameter is the converter entry element.
+The &quot;c&quot; collection returns a precise result, and the &quot;sc&quot; collection returns
+always a string.
+
+The sample-fetches used in the example function are &quot;txn.sf:req_fhdr()&quot;,
+&quot;txn.sf:path()&quot; and &quot;txn.sf:src()&quot;. The converter is &quot;txn.sc:sdbm()&quot;. The same
+function with the &quot;s&quot; collection of sample-fetches and the &quot;c&quot; collection of
+converter should be written like this:
+
+    1. function my_hash(txn, salt)
+    2.    local str = &quot;&quot;
+    3.    str = str .. salt
+    4.    str = str .. tostring(txn.f:req_fhdr(&quot;host&quot;))
+    5.    str = str .. tostring(txn.f:path())
+    6.    str = str .. tostring(txn.f:src())
+    7.    local result = tostring(txn.c:sdbm(str, 1))
+    8.    return result
+    9. end
+   10.
+   11. core.register_fetches(&quot;my-hash&quot;, my_hash)
+</pre><a class="anchor" name="tostring"></a><a class="anchor" name="4-tostring"></a><a class="anchor" name="4.3-tostring"></a><a class="anchor" name="tostring (First steps with Lua)"></a><a class="anchor" name="tostring (First useful example)"></a><div class="keyword"><b><a class="anchor" name="tostring"></a><a href="#4.3-tostring">tostring</a></b></div><pre class="text">~~~~~~~~
+
+The function tostring ensures that its parameter is returned as a string. If the
+parameter is a table or a thread or anything that will not have any sense as a
+string, a form like the typename followed by a pointer is returned. For example:
+
+   t = {}
+   print(tostring(t))
+
+returns:
+
+   table: 0x15facc0
+
+For objects, if the special function __tostring() is registered in the attached
+metatable, it will be called with the table itself as first argument. The
+HAProxy object returns its own type.
+</pre></div>
+<a class="anchor" id="4.4" name="4.4"></a>
+<h2 id="chapter-4.4" data-target="4.4"><small><a class="small" href="#4.4">4.4.</a></small> About the converters entry point</h2>
+<div><pre class="text">In HAProxy, a converter is a stateless function that takes a data as entry and
+returns a transformation of this data as output. In Lua it is exactly the same
+behaviour.
+
+So, the registered Lua function doesn&#x27;t have any special parameters, just a
+variable as input which contains the value to convert, and it must return data.
+
+The data required as input by the Lua converter is a string. So HAProxy will
+always provide a string as input. If the native sample fetch is not a string it
+will be converted in best effort.
+
+The returned value will have anything type, it will be converted as sample of
+the near HAProxy type. The conversion rules from Lua variables to HAProxy
+samples are:
+
+   Lua        | HAProxy sample types
+   -----------+---------------------
+   &quot;number&quot;   | &quot;sint&quot;
+   &quot;boolean&quot;  | &quot;bool&quot;
+   &quot;string&quot;   | &quot;str&quot;
+   &quot;userdata&quot; | &quot;bool&quot; (false)
+   &quot;nil&quot;      | &quot;bool&quot; (false)
+   &quot;table&quot;    | &quot;bool&quot; (false)
+   &quot;function&quot; | &quot;bool&quot; (false)
+   &quot;thread&quot;   | &quot;bool&quot; (false)
+
+The function used for registering a converter is:
+
+   core.register_converters()
+</pre></div>
+<a class="anchor" id="4.5" name="4.5"></a>
+<h2 id="chapter-4.5" data-target="4.5"><small><a class="small" href="#4.5">4.5.</a></small> The task entry point</h2>
+<div><pre class="text">The function &quot;core.register_task(fcn)&quot; executes once the function &quot;fcn&quot; when the
+scheduler starts. This way is used for executing background task. For example,
+you can use this functionality for periodically checking the health of another
+service, and giving the result to each proxy needing it.
+
+The task is started once, if you want periodic actions, you can use the
+&quot;core.sleep()&quot; or &quot;core.msleep()&quot; for waiting the next runtime.
+</pre></div>
+<a class="anchor" id="4.6" name="4.6"></a>
+<h2 id="chapter-4.6" data-target="4.6"><small><a class="small" href="#4.6">4.6.</a></small> Storing Lua variable between function in the same session</h2>
+<div><pre class="text">All the functions registered as action or sample fetch can share an Lua context.
+This context is a memory zone in the stack. sample fetch and action use the
+same stack, so both can access to the context.
+
+The context is accessible via the function get_priv and set_priv provided by an
+object of class TXN. The value given to set_priv replaces the current stored
+value. This value can be a table, it is useful if a lot of data can be shared.
+
+If the value stored is a table, you can add or remove entries from the table
+without storing again the new table. Maybe an example will be clearer:
+
+   local t = {}
+   txn:set_priv(t)
+
+   t[&quot;entry1&quot;] = &quot;foo&quot;
+   t[&quot;entry2&quot;] = &quot;bar&quot;
+
+   -- this will display &quot;foo&quot;
+   print(txn:get_priv()[&quot;entry1&quot;])
+</pre></div>
+<a class="anchor" id="5" name="5"></a>
+<div class="page-header"><h1 id="chapter-5" data-target="5"><small><a class="small" href="#5">5.</a></small> HTTP actions</h1>
+</div><div><pre class="text">... coming soon ...
+</pre></div>
+<a class="anchor" id="6" name="6"></a>
+<div class="page-header"><h1 id="chapter-6" data-target="6"><small><a class="small" href="#6">6.</a></small> Lua is fast, but my service require more execution speed</h1>
+</div><div><pre class="text">We can write C modules for Lua. These modules must run with HAProxy while they
+are compliant with the HAProxy Lua version. A simple example is the &quot;concat&quot;
+module.
+
+It is very easy to write and compile a C Lua library, however, I don&#x27;t see
+documentation about this process. So the current chapter is a quick howto.
+</pre></div>
+<a class="anchor" id="6.1" name="6.1"></a>
+<h2 id="chapter-6.1" data-target="6.1"><small><a class="small" href="#6.1">6.1.</a></small> The entry point</h2>
+<div><pre class="text">The entry point is called &quot;luaopen_&lt;name&gt;&quot;, where &lt;name&gt; is the name of the &quot;.so&quot;
+file. An hello world is like this:
+
+   #include &lt;stdio.h&gt;
+   #include &lt;lua.h&gt;
+   #include &lt;lauxlib.h&gt;
+
+   int luaopen_mymod(lua_State *L)
+   {
+      printf(&quot;Hello world\n&quot;);
+      return 0;
+   }
+</pre></div>
+<a class="anchor" id="6.2" name="6.2"></a>
+<h2 id="chapter-6.2" data-target="6.2"><small><a class="small" href="#6.2">6.2.</a></small> The build</h2>
+<div><pre class="text">The compilation of the source file requires the Lua &quot;include&quot; directory. The
+compilation and the link of the object file requires the -fPIC option. That&#x27;s
+all.
+
+   cc -I/opt/lua/include -fPIC -shared  -o mymod.so mymod.c
+</pre></div>
+<a class="anchor" id="6.3" name="6.3"></a>
+<h2 id="chapter-6.3" data-target="6.3"><small><a class="small" href="#6.3">6.3.</a></small> Usage</h2>
+<div><pre class="text">You can load this module with the following Lua syntax:
+
+   require(&quot;mymod&quot;)
+
+When you start HAProxy, this module just print &quot;Hello world&quot; when it is loaded.
+Please, remember that HAProxy doesn&#x27;t allow blocking method, so if you write a
+function doing filesystem access or synchronous network access, all the HAProxy
+process will fail.
+</pre></div>
+
+						<br>
+						<hr>
+						<div class="text-right">
+							HAProxy 2.5.3 &ndash; Lua<br>
+							<small>author: Thierry FOURNIER, </small>
+						</div>
+					</div>
+					<!-- /.col-lg-12 -->
+				</div>
+				<!-- /.row -->
+			</div>
+			<!-- /#page-wrapper -->
+
+		</div>
+		<!-- /#wrapper -->
+
+        <script src="js/jquery.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+		<script>
+			function filterKeywords(text) {
+				$('.letter').each(function(idx1, letter) {
+					$letter = $(letter)
+					found = false
+					$letter.find('.list-group-item').each(function(idx2, keyword) {
+						$keyword = $(keyword)
+						if ($keyword.text().indexOf(text) != -1) {
+							$keyword.show();
+							found = true
+						}
+						else {
+							$keyword.hide();
+						}
+					})
+					if (found) {
+						$letter.show()
+					}
+					else {
+						$letter.hide()
+					}
+				})
+			}
+		</script>
+		<script>
+			/* EXPERIMENTAL - Previous/Next navigation */
+			var headings = $(":header")
+			var previousTarget = false
+			var nextTarget = false
+			var $previous = $('#previous')
+			var $next = $('#next')
+			function refreshNavigation() {
+				var previous = false
+				var next = false
+				$.each(headings, function(item, value) {
+					var el = $(value)
+
+					// TODO : avoid target recalculation on each refresh
+					var target = el.attr('data-target')
+					if (! target) return true
+
+					var target_el = $('#' + target.replace(/\./, "\\."))
+					if (! target_el.attr('id')) return true
+
+					if (target_el.offset().top < $(window).scrollTop()) {
+						previous = el
+					}
+					if (target_el.offset().top - 1 > $(window).scrollTop()) {
+						next = el
+					}
+					if (next) return false
+				})
+
+				previousTarget = previous ? previous.attr('data-target') : 'top'
+				nextTarget = next ? next.attr('data-target') : 'bottom'
+			}
+
+			$(window).scroll(function () {
+				refreshNavigation()
+			});
+			$(document).ready(function() {
+				refreshNavigation()
+			});
+
+			/* EXPERIMENTAL - Enable keyboard navigation */
+			$(document).keydown(function(e){
+				if (!(e.altKey || e.ctrlKey || e.shiftKey || e.metaKey)) {
+					switch(e.which) {
+						case 37: // left
+						window.location.hash = previousTarget ? previousTarget : 'top'
+						break
+
+						case 39: // right
+						window.location.hash = nextTarget ? nextTarget : 'bottom'
+						break
+
+						default: return // exit this handler for other keys
+					}
+					e.preventDefault()
+				}
+			})
+		</script>
+		<a class="anchor" name="bottom"></a>
+	</body>
+</html>
+
