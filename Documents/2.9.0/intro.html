@@ -2,13 +2,13 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<title>HAProxy version 2.8.9 - Starter Guide</title>
-		<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
-		<link href="https://raw.githubusercontent.com/thomaspark/bootswatch/v3.3.7/cerulean/bootstrap.min.css" rel="stylesheet" />
-		<link href="../css/page.css?0.4.2-15" rel="stylesheet" />
+		<title>HAProxy version 2.9.0 - Starter Guide</title>
+        <link href="css/twitter-bootstrap.min.css" rel="stylesheet" />
+        <link href="css/cerulean-bootstrap.min.css" rel="stylesheet" />
+        <link href="css/page.css?0.4.2" rel="stylesheet" />
 	</head>
 	<body>
-		<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+		<nav class="navbar navbar-default" role="navigation">
 			<div class="navbar-header">
 				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#menu">
 					<span class="sr-only">Toggle navigation</span>
@@ -16,7 +16,6 @@
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 				</button>
-				<a class="navbar-brand" href="../">HAProxy Documentation</a>
 			</div>
 			<!-- /.navbar-header -->
 
@@ -27,475 +26,18 @@
 						<li class=""><a href="configuration.html">Configuration Manual</a></li>
 						<li class=""><a href="management.html">Management Guide</a></li>
 				</ul>
-				<ul class="nav navbar-nav">
-					<li><a href="http://www.haproxy.org/">HAProxy Home Page</a></li>
-				</ul>
 			</div>
 		</nav>
 		<!-- /.navbar-static-side -->
 
 		<div id="wrapper">
-
-			<div id="sidebar">
-				<ul class="nav nav-tabs" role="tablist">
-					<li role="presentation" class="active"><a href="#tab-summary" aria-controls="tab-summary" role="tab" data-toggle="tab">Summary</a></li>
-				</ul>
-				<div class="tab-content">
-					<div role="tabpanel" class="tab-pane active" id="tab-summary">
-						<table class="summary">
-	<tbody>
-		
-			
-				
-				<tr>
-					<td><b><small>1.</small></b></td>
-					<td>
-							<a href="#1"><b>Available documentation</b></a>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><br><b><small>2.</small></b></td>
-					<td>
-							<a href="#2"><br><b>Quick introduction to load balancing and load balancers</b></a>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><br><b><small>3.</small></b></td>
-					<td>
-							<a href="#3"><br><b>Introduction to HAProxy</b></a>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.1.</small></td>
-					<td>
-							<div class="tab">
-							<a href="#3.1">What HAProxy is and is not</a>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.2.</small></td>
-					<td>
-							<div class="tab">
-							<a href="#3.2">How HAProxy works</a>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.3.</small></td>
-					<td>
-							<div class="tab">
-							<a href="#3.3">Basic features</a>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.3.1.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.3.1">Proxying</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.3.2.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.3.2">SSL</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.3.3.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.3.3">Monitoring</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.3.4.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.3.4">High availability</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.3.5.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.3.5">Load balancing</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.3.6.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.3.6">Stickiness</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.3.7.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.3.7">Logging</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.3.8.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.3.8">Statistics</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.4.</small></td>
-					<td>
-							<div class="tab">
-							<a href="#3.4">Standard features</a>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.4.1.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.4.1">Sampling and converting information</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.4.2.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.4.2">Maps</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.4.3.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.4.3">ACLs and conditions</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.4.4.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.4.4">Content switching</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.4.5.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.4.5">Stick-tables</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.4.6.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.4.6">Formatted strings</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.4.7.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.4.7">HTTP rewriting and redirection</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.4.8.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.4.8">Server protection</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.5.</small></td>
-					<td>
-							<div class="tab">
-							<a href="#3.5">Advanced features</a>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.5.1.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.5.1">Management</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.5.2.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.5.2">System-specific capabilities</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.5.3.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.5.3">Scripting</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.5.4.</small></td>
-					<td>
-							<div class="tab">
-							<div class="tab">
-							<a href="#3.5.4">Advanced features: Tracing</a>
-							</div>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.6.</small></td>
-					<td>
-							<div class="tab">
-							<a href="#3.6">Sizing</a>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>3.7.</small></td>
-					<td>
-							<div class="tab">
-							<a href="#3.7">How to get HAProxy</a>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><br><b><small>4.</small></b></td>
-					<td>
-							<a href="#4"><br><b>Companion products and alternatives</b></a>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>4.1.</small></td>
-					<td>
-							<div class="tab">
-							<a href="#4.1">Apache HTTP server</a>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>4.2.</small></td>
-					<td>
-							<div class="tab">
-							<a href="#4.2">NGINX</a>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>4.3.</small></td>
-					<td>
-							<div class="tab">
-							<a href="#4.3">Varnish</a>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><small>4.4.</small></td>
-					<td>
-							<div class="tab">
-							<a href="#4.4">Alternatives</a>
-							</div>
-					<td>
-				</tr>
-				
-			
-				
-				<tr>
-					<td><br><b><small>5.</small></b></td>
-					<td>
-							<a href="#5"><br><b>Contacts</b></a>
-					<td>
-				</tr>
-				
-	</tbody>
-</table>
-
-					</div>
-				</div>
-
-				<p>
-					Keyboard navigation&nbsp;: <span id="keyboardNavStatus"></span>
-				</p>
-				<p>
-					You can use <strong>left</strong> and <strong>right</strong> arrow keys to navigate between chapters.<br>
-				</p>
-				<p class="text-right">
-					<small>Converted with <a href="https://github.com/cbonte/haproxy-dconv">haproxy-dconv</a> v<b>0.4.2-15</b> on <b>2024/04/05</b></small>
-				</p>
-			</div>
-			<!-- /.sidebar -->
-
 			<div id="page-wrapper">
 				<div class="row">
 					<div class="col-lg-12">
 						<div class="text-center">
-                            <h1><a href="http://www.haproxy.org/" title="HAProxy"><img src="../img/HAProxyCommunityEdition_60px.png?0.4.2-15" /></a></h1>
+                            <h1><a href="http://www.haproxy.org/" title="HAProxy"><img src="img/HAProxyCommunityEdition_60px.png?0.4.2" /></a></h1>
 							<h2>Starter Guide</h2>
-							<p><strong>version 2.8.9</strong></p>
+							<p><strong>version 2.9.0</strong></p>
 							<p>
 								<br>
 								
@@ -2515,7 +2057,7 @@ appear in changelogs.
 						<br>
 						<hr>
 						<div class="text-right">
-							HAProxy 2.8.9 &ndash; Starter Guide<br>
+							HAProxy 2.9.0 &ndash; Starter Guide<br>
 							<small>, </small>
 						</div>
 					</div>
@@ -2528,8 +2070,8 @@ appear in changelogs.
 		</div>
 		<!-- /#wrapper -->
 
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+        <script src="js/jquery.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
 		<script>
 			function filterKeywords(text) {
 				$('.letter').each(function(idx1, letter) {
@@ -2612,7 +2154,6 @@ appear in changelogs.
 				}
 			})
 		</script>
-		
 		<a class="anchor" name="bottom"></a>
 	</body>
 </html>
