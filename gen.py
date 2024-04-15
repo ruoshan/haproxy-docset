@@ -25,7 +25,7 @@ docpath = './Documents'
 
 def gen_index(filename):
     page = open(os.path.join(docpath,filename)).read()
-    soup = BeautifulSoup(page)
+    soup = BeautifulSoup(page, features="lxml")
 
     for div in soup.find_all('div', {'class': "keyword"}):
         try:
